@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Deadlines">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>Deadlines</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>Deadlines</h1>
+  </header>
+
+  <main id="app" aria-live="polite"></main>
+
+  <div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button id="toast-action" class="toast-action" type="button" hidden>Undo</button></div>
+
+  <button id="add-btn" class="fab" type="button" aria-label="Add deadline">+</button>
+
+  <dialog id="item-dialog">
+    <form id="item-form" method="dialog" novalidate>
+      <h2 id="item-dialog-title" tabindex="-1" autofocus>New deadline</h2>
+      <label>Title
+        <input name="title" dir="auto" required maxlength="80" placeholder="e.g. Midterm, HW3">
+      </label>
+      <label>Course
+        <input name="course" dir="auto" maxlength="60" placeholder="e.g. Linear Algebra">
+      </label>
+      <label>Due date
+        <input name="due" type="date" required>
+      </label>
+      <div class="parts-header">
+        <h3>Effort</h3>
+        <p class="muted small">Add a part for each kind of work, e.g. lectures to watch plus days of study.</p>
+      </div>
+      <div id="parts-list"></div>
+      <button id="add-part-btn" class="secondary" type="button">+ Add effort part</button>
+      <p id="item-errors" class="errors" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="delete-btn" class="danger" type="button" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button value="cancel" type="button" data-close>Cancel</button>
+        <button class="primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="track-dialog">
+    <form id="track-form" method="dialog" novalidate>
+      <h2 id="track-dialog-title" tabindex="-1" autofocus>New lecture track</h2>
+      <label>Course
+        <input name="name" dir="auto" required maxlength="60" placeholder="e.g. Algorithms">
+      </label>
+      <fieldset class="plain">
+        <legend>Lecture days</legend>
+        <div id="track-days" class="day-picker"></div>
+      </fieldset>
+      <div class="row">
+        <label>First lecture
+          <input name="startDate" type="date" required>
+        </label>
+        <label>Semester ends
+          <input name="endDate" type="date" required>
+        </label>
+      </div>
+      <div class="row">
+        <label>Hours per lecture
+          <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" required>
+        </label>
+        <label>Watched so far
+          <input name="watched" type="number" inputmode="numeric" min="0" step="1" value="0">
+        </label>
+      </div>
+      <fieldset class="plain">
+        <legend>Breaks — no lectures</legend>
+        <p class="muted small">Holidays or semester breaks. Leave "To" empty for a single day.</p>
+        <div id="track-breaks" class="breaks-list"></div>
+        <button id="add-break-btn" class="button-like" type="button">+ Add break</button>
+      </fieldset>
+      <p id="track-preview" class="preview"></p>
+      <p class="muted small">Lectures are due by the next exam or assignment that links this track, or by semester end.</p>
+      <p id="track-errors" class="errors" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="track-delete-btn" class="danger" type="button" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button type="button" data-close>Cancel</button>
+        <button class="primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form id="settings-form" method="dialog" novalidate>
+      <h2 tabindex="-1" autofocus>Settings</h2>
+      <label>Study hours per week
+        <input name="weeklyHours" type="number" inputmode="decimal" min="1" max="168" step="0.5" required>
+      </label>
+      <p class="muted small">Used to work out how much time you have before each deadline.</p>
+      <p id="settings-errors" class="errors" role="alert"></p>
+      <h3>Backup</h3>
+      <div class="dialog-actions">
+        <button id="export-btn" type="button">Export JSON</button>
+        <label class="button-like">Import JSON
+          <input id="import-input" type="file" accept="application/json,.json" hidden>
+        </label>
+      </div>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button type="button" data-close>Cancel</button>
+        <button class="primary" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

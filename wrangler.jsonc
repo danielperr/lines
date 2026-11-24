@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "study-deadlines",
+  "compatibility_date": "2026-11-23",
+  // Only the built app is published; run `npm run build` first (npm run deploy does).
+  "assets": {
+    "directory": "./dist"
+  },
+  // Keep the old *.workers.dev URL live so data in its localStorage can still be exported.
+  "workers_dev": true,
+  // Served at study.danielperr.com (DNS zone on Cloudflare; domain registered in AWS Route 53).
+  "routes": [
+    { "pattern": "study.danielperr.com", "custom_domain": true }
+  ]
+}
