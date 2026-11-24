@@ -96,6 +96,86 @@
     </form>
   </dialog>
 
+  <dialog id="course-dialog" class="wizard">
+    <form id="course-form" method="dialog" novalidate>
+      <div class="wizard-head">
+        <p id="wizard-progress-text" class="eyebrow">Step 1 of 4</p>
+        <div class="wizard-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      </div>
+
+      <section data-step="name" class="wizard-step">
+        <h2 tabindex="-1">What's the course called?</h2>
+        <p class="muted small">Use the same name you'd look for on your timetable. Everything you add next is grouped under it.</p>
+        <label>Course name
+          <input name="courseName" dir="auto" maxlength="60" autocomplete="off" placeholder="e.g. Linear Algebra">
+        </label>
+        <p id="wizard-name-hint" class="hint" hidden></p>
+      </section>
+
+      <section data-step="lectures" class="wizard-step" hidden>
+        <h2 tabindex="-1">Weekly lectures</h2>
+        <p class="muted small">If lectures are recorded or released on fixed days, the app keeps track of your backlog for you.</p>
+        <label class="switch-row">
+          <input name="hasLectures" type="checkbox" checked>
+          <span>This course has weekly lectures</span>
+        </label>
+        <div id="wizard-lecture-fields" class="wizard-fields">
+          <fieldset class="plain">
+            <legend>Which days?</legend>
+            <div id="wizard-days" class="day-picker"></div>
+          </fieldset>
+          <div class="row">
+            <label>First lecture
+              <input name="startDate" type="date">
+            </label>
+            <label>Semester ends
+              <input name="endDate" type="date">
+            </label>
+          </div>
+          <div class="row">
+            <label>Hours per lecture
+              <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25">
+            </label>
+            <label>Watched so far
+              <input name="watched" type="number" inputmode="numeric" min="0" step="1">
+            </label>
+          </div>
+          <fieldset class="plain">
+            <legend>Breaks — optional</legend>
+            <p class="muted small">Holidays with no lectures. Leave "To" empty for a single day.</p>
+            <div id="wizard-breaks" class="breaks-list"></div>
+            <button id="wizard-add-break-btn" class="button-like" type="button">+ Add break</button>
+          </fieldset>
+          <p id="wizard-lecture-preview" class="preview"></p>
+        </div>
+      </section>
+
+      <section data-step="deadlines" class="wizard-step" hidden>
+        <h2 tabindex="-1">Exams and assignments</h2>
+        <p class="muted small">Add what you know now — you can always add more later with +.</p>
+        <div id="wizard-deadlines" class="wizard-deadlines"></div>
+        <p id="wizard-deadlines-empty" class="muted small">Nothing yet.</p>
+        <div class="wizard-add-row">
+          <button id="wizard-add-exam" class="secondary" type="button">+ Exam</button>
+          <button id="wizard-add-assignment" class="secondary" type="button">+ Assignment</button>
+        </div>
+      </section>
+
+      <section data-step="review" class="wizard-step" hidden>
+        <h2 tabindex="-1">Looks good?</h2>
+        <div id="wizard-summary" class="wizard-summary"></div>
+      </section>
+
+      <p id="course-errors" class="errors" role="alert"></p>
+      <div class="dialog-actions">
+        <button id="wizard-back-btn" type="button" hidden>Back</button>
+        <span class="spacer"></span>
+        <button type="button" data-close>Cancel</button>
+        <button id="wizard-next-btn" class="primary" type="submit">Next</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="settings-dialog">
     <form id="settings-form" method="dialog" novalidate>
       <h2 tabindex="-1" autofocus>Settings</h2>

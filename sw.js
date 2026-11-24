@@ -15,7 +15,10 @@ const APP_SHELL = [
   './icons/icon-192.png',
   './icons/icon-512.png',
   './src/app.js',
+  './src/break-rows.js',
   './src/change-guard.js',
+  './src/course-wizard-form.js',
+  './src/course-wizard.js',
   './src/dates.js',
   './src/dom.js',
   './src/item-form.js',
@@ -31,6 +34,7 @@ const APP_SHELL = [
   './src/undo.js',
   './src/view-parts.js',
   './src/view.js',
+  './src/wizard-deadline-row.js',
 ];
 
 self.addEventListener('install', (event) => {

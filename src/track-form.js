@@ -1,33 +1,9 @@
 import { h, localTodayIso, newId } from './dom.js';
 import { WEEKDAY_NAMES, lectureDates, releasedBy, validateTrack } from './tracks.js';
+import { breakRow, readBreaks, wireAddBreak } from './break-rows.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const DEFAULT_HOURS_PER_LECTURE = 1.5;
-
-// One editable break: From / To dates and a remove button. An empty To means a single day.
-const breakRow = ({ from, to }, onChange) => {
-  const row = h('div', { class: 'break-row' },
-    h('div', { class: 'break-head' },
-      h('span', {}, 'Break'),
-      h('button', {
-        class: 'link-btn',
-        type: 'button',
-        onClick: () => { row.remove(); onChange(); },
-      }, 'Remove')),
-    h('div', { class: 'row' },
-      h('label', {}, 'From', h('input', { type: 'date', 'data-break': 'from', value: from })),
-      h('label', {}, 'To', h('input', { type: 'date', 'data-break': 'to', value: to === from ? '' : to }))));
-  return row;
-};
-
-// Rows with no dates at all are ignored; a missing To copies From.
-const readBreaks = (container) => [...container.querySelectorAll('.break-row')]
-  .map((row) => ({
-    from: row.querySelector('[data-break="from"]').value,
-    to: row.querySelector('[data-break="to"]').value,
-  }))
-  .filter((b) => b.from || b.to)
-  .map((b) => ({ from: b.from || b.to, to: b.to || b.from }));
 
 /**
  * Wires the lecture-track dialog. Calls onSave(track) with a validated track;
@@ -91,11 +67,7 @@ export const createTrackForm = ({ dialog, onSave, onDelete }) => {
 
   form.addEventListener('input', updatePreview);
 
-  addBreakBtn.addEventListener('click', () => {
-    const row = breakRow({ from: '', to: '' }, updatePreview);
-    breaksEl.append(row);
-    row.querySelector('input').focus();
-  });
+  wireAddBreak(addBreakBtn, breaksEl, updatePreview);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();

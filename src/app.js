@@ -2,6 +2,7 @@ import { planSchedule } from './scheduler.js';
 import { DEFAULT_STATE, STORAGE_KEY, loadState, parseState, saveState, serializeState } from './storage.js';
 import { h, localTodayIso } from './dom.js';
 import { guardDialog } from './change-guard.js';
+import { createCourseWizard } from './course-wizard-form.js';
 import { createItemForm } from './item-form.js';
 import { registerOffline } from './offline.js';
 import { createTrackForm } from './track-form.js';
@@ -112,6 +113,22 @@ const deleteTrack = (id) => {
 
 const trackForm = createTrackForm({ dialog: $('#track-dialog'), onSave: saveTrack, onDelete: deleteTrack });
 
+// ---- Add-course wizard ----
+
+/** Adds a lecture track (if any) and its deadlines in one step, with Undo. */
+const addCourse = ({ track, items }) => {
+  const name = track?.name ?? items[0]?.course ?? 'course';
+  commitUndoable({
+    ...state,
+    tracks: track ? [...state.tracks, track] : state.tracks,
+    items: [...state.items, ...items],
+  }, `Added "${name}"`);
+};
+
+const courseNames = () => [...state.tracks.map((t) => t.name), ...state.items.map((i) => i.course)].filter(Boolean);
+
+const courseWizard = createCourseWizard({ dialog: $('#course-dialog'), onSave: addCourse, getCourseNames: courseNames });
+
 // ---- Settings dialog ----
 
 const openSettings = () => {
@@ -208,6 +225,7 @@ const jumpToCourse = (key) => {
 const markItemClean = guardDialog($('#item-dialog'));
 const markTrackClean = guardDialog($('#track-dialog'));
 const markSettingsClean = guardDialog(settingsDialog);
+const markCourseClean = guardDialog($('#course-dialog'));
 
 const actions = {
   step,
@@ -216,6 +234,7 @@ const actions = {
   edit: (id) => { itemForm.open(state.items.find((item) => item.id === id)); markItemClean(); },
   editTrack: (id) => { trackForm.open(state.tracks.find((t) => t.id === id)); markTrackClean(); },
   settings: () => { openSettings(); markSettingsClean(); },
+  addCourse: () => { courseWizard.open(); markCourseClean(); },
 };
 
 $('#add-btn').addEventListener('click', () => actions.edit(null));

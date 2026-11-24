@@ -98,15 +98,26 @@ const summary = (active, tracks, weeklyHours, onSettings) => {
     h('button', { class: 'chip', type: 'button', onClick: onSettings }, `${weeklyHours}h / week`));
 };
 
+const welcome = (onAddCourse) => h('div', { class: 'empty welcome' },
+  h('h2', {}, 'Let\'s set up your semester'),
+  h('p', { class: 'muted' }, 'Add one course at a time: its lecture days, exams and assignments. The app then works out what to do each day.'),
+  h('button', { class: 'primary', type: 'button', onClick: onAddCourse }, 'Add your first course'));
+
+const coursesHead = (hidden, onAddCourse) => (hidden ? null : h('div', { class: 'section-head' },
+  h('h2', { class: 'section-title' }, 'Courses'),
+  h('button', { class: 'chip', type: 'button', onClick: onAddCourse }, '+ Course')));
+
 export const renderApp = (root, { plan, weeklyHours, actions }) => {
   const { active, done, tracks } = plan;
   const empty = active.length === 0 && done.length === 0;
   const sections = [
     summary(active, tracks, weeklyHours, actions.settings),
+    coursesHead(empty && tracks.length === 0, actions.addCourse),
     overviewSection(plan, actions.jump),
-    empty ? h('div', { class: 'empty' },
+    empty && tracks.length === 0 ? welcome(actions.addCourse) : null,
+    empty && tracks.length > 0 ? h('div', { class: 'empty' },
       h('h2', {}, 'No deadlines yet'),
-      h('p', { class: 'muted' }, 'Tap + to add an exam or assignment. Add your courses\' lecture schedules below.')) : null,
+      h('p', { class: 'muted' }, 'Tap + to add an exam or assignment.')) : null,
     active[0] ? nextUpCard(active[0], weeklyHours, actions) : null,
     trackSection(tracks, actions),
     active.length > 1 ? h('h2', { class: 'section-title' }, 'Other deadlines, most urgent first') : null,

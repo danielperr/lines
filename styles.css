@@ -354,3 +354,29 @@ button:active:not(:disabled) { transform: scale(0.95); filter: brightness(0.92);
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---- Add-course wizard ---- */
+.wizard-head { display: grid; gap: 8px; }
+.wizard .eyebrow { color: var(--accent); }
+.wizard-dots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.wizard-dots span { height: 4px; border-radius: 2px; background: var(--border); transition: background 200ms ease-out; }
+.wizard-dots span.on { background: var(--accent); }
+.wizard-step, .wizard-fields { display: grid; gap: 12px; }
+.wizard-step[hidden], .wizard-fields[hidden] { display: none; }
+.wizard-step h2 { margin: 0; }
+.wizard-step > .muted { margin: -4px 0 0; }
+.hint { margin: 0; font-size: 13px; color: var(--accent); }
+.switch-row { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.switch-row[hidden] { display: none; }
+.switch-row input { width: 22px; height: 22px; min-height: 0; margin: 0; accent-color: var(--accent); flex-shrink: 0; }
+.wizard-deadlines { display: grid; gap: 12px; }
+.wizard-deadlines:empty { display: none; }
+.wizard-deadline { display: grid; gap: 8px; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px 12px; margin: 0; min-width: 0; }
+.wizard-add-row { display: flex; gap: 8px; }
+.wizard-add-row button { flex: 1; }
+.wizard-summary-body { display: grid; gap: 4px; }
+.wizard-summary-body h3 { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.wizard-summary-body p { margin: 0; }
+.wizard-summary-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.wizard-summary-title, .wizard-deadline input[name="title"] { unicode-bidi: plaintext; }
+.welcome .primary { justify-self: center; margin-top: 8px; padding: 13px 22px; }
