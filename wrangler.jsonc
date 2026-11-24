@@ -11,5 +11,7 @@
   // Served at study.danielperr.com (DNS zone on Cloudflare; domain registered in AWS Route 53).
   "routes": [
     { "pattern": "study.danielperr.com", "custom_domain": true }
-  ]
+  ],
+  // Required by `wrangler preview` (Cloudflare preview deployments). Empty = inherit top-level settings.
+  "previews": {}
 }
