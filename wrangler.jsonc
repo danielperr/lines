@@ -11,5 +11,15 @@
   // Served at study.danielperr.com (DNS zone on Cloudflare; domain registered in AWS Route 53).
   "routes": [
     { "pattern": "study.danielperr.com", "custom_domain": true }
-  ]
+  ],
+  "env": {
+    // Review stage: `npm run deploy:review` publishes to a separate Worker
+    // (study-deadlines-review) on workers.dev only. Routes are cleared so it
+    // can never take over the production domain.
+    "review": {
+      "name": "study-deadlines-review",
+      "workers_dev": true,
+      "routes": []
+    }
+  }
 }
