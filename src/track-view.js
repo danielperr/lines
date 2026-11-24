@@ -60,7 +60,7 @@ h('div', { class: 'part' },
 export const trackSection = (tracks, actions) => h('section', { class: 'tracks', 'aria-label': 'Lecture tracks' },
   h('div', { class: 'section-head' },
     h('h2', { class: 'section-title' }, 'Lectures'),
-    h('button', { class: 'chip', type: 'button', onClick: () => actions.editTrack(null) }, '+ Track')),
+    h('button', { class: 'btn-plain', type: 'button', onClick: () => actions.editTrack(null) }, '+ Track')),
   tracks.length
     ? tracks.slice().sort((a, b) => b.behind - a.behind || a.name.localeCompare(b.name)).map((t) => trackCard(t, actions))
     : h('p', { class: 'muted small' }, 'Add a course\'s lecture schedule to keep your backlog in check.'));

@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Deadlines">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,152 +25,189 @@
 
   <button id="add-btn" class="fab" type="button" aria-label="Add deadline">+</button>
 
-  <dialog id="item-dialog">
+  <dialog id="item-dialog" class="sheet">
     <form id="item-form" method="dialog" novalidate>
-      <h2 id="item-dialog-title" tabindex="-1" autofocus>New deadline</h2>
-      <label>Title
-        <input name="title" dir="auto" required maxlength="80" placeholder="e.g. Midterm, HW3">
-      </label>
-      <label>Course
-        <input name="course" dir="auto" maxlength="60" placeholder="e.g. Linear Algebra">
-      </label>
-      <label>Due date
-        <input name="due" type="date" required>
-      </label>
-      <div class="parts-header">
-        <h3>Effort</h3>
-        <p class="muted small">Add a part for each kind of work, e.g. lectures to watch plus days of study.</p>
+      <div class="sheet-top">
+        <header class="sheet-bar">
+          <button class="bar-btn" type="button" data-close>Cancel</button>
+          <h2 id="item-dialog-title" class="sheet-title" tabindex="-1" autofocus>New deadline</h2>
+          <button class="bar-btn bar-done" type="submit">Save</button>
+        </header>
+        <p id="item-errors" class="errors" role="alert"></p>
       </div>
-      <div id="parts-list"></div>
-      <button id="add-part-btn" class="secondary" type="button">+ Add effort part</button>
-      <p id="item-errors" class="errors" role="alert"></p>
-      <div class="dialog-actions">
-        <button id="delete-btn" class="danger" type="button" hidden>Delete</button>
-        <span class="spacer"></span>
-        <button value="cancel" type="button" data-close>Cancel</button>
-        <button class="primary" type="submit">Save</button>
+
+      <div class="group">
+        <label>Title
+          <input name="title" dir="auto" required maxlength="80" placeholder="Midterm, HW3">
+        </label>
+        <label>Course
+          <input name="course" dir="auto" maxlength="60" placeholder="Linear Algebra">
+        </label>
+        <label>Due date
+          <input name="due" type="date" required>
+        </label>
       </div>
+
+      <h3 class="group-header">Effort</h3>
+      <div id="parts-list" class="stack"></div>
+      <button id="add-part-btn" class="add-row" type="button">Add effort part</button>
+      <p class="group-footer">Add a part for each kind of work, like lectures to watch plus days of study.</p>
+
+      <button id="delete-btn" class="destructive-row" type="button" hidden>Delete deadline</button>
     </form>
   </dialog>
 
-  <dialog id="track-dialog">
+  <dialog id="track-dialog" class="sheet">
     <form id="track-form" method="dialog" novalidate>
-      <h2 id="track-dialog-title" tabindex="-1" autofocus>New lecture track</h2>
-      <label>Course
-        <input name="name" dir="auto" required maxlength="60" placeholder="e.g. Algorithms">
-      </label>
-      <fieldset class="plain">
-        <legend>Lecture days</legend>
-        <div id="track-days" class="day-picker"></div>
-      </fieldset>
-      <div class="row">
-        <label>First lecture
-          <input name="startDate" type="date" required>
-        </label>
-        <label>Semester ends
-          <input name="endDate" type="date" required>
+      <div class="sheet-top">
+        <header class="sheet-bar">
+          <button class="bar-btn" type="button" data-close>Cancel</button>
+          <h2 id="track-dialog-title" class="sheet-title" tabindex="-1" autofocus>New lecture track</h2>
+          <button class="bar-btn bar-done" type="submit">Save</button>
+        </header>
+        <p id="track-errors" class="errors" role="alert"></p>
+      </div>
+
+      <div class="group">
+        <label>Course
+          <input name="name" dir="auto" required maxlength="60" placeholder="Algorithms">
         </label>
       </div>
-      <div class="row">
-        <label>Hours per lecture
-          <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" required>
-        </label>
-        <label>Watched so far
-          <input name="watched" type="number" inputmode="numeric" min="0" step="1" value="0">
-        </label>
+
+      <fieldset class="plain">
+        <legend class="group-header">Lecture days</legend>
+        <div class="group padded">
+          <div id="track-days" class="day-picker"></div>
+        </div>
+      </fieldset>
+
+      <div class="group">
+        <div class="row">
+          <label>First lecture
+            <input name="startDate" type="date" required>
+          </label>
+          <label>Semester ends
+            <input name="endDate" type="date" required>
+          </label>
+        </div>
+        <div class="row">
+          <label>Hours per lecture
+            <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" required>
+          </label>
+          <label>Watched so far
+            <input name="watched" type="number" inputmode="numeric" min="0" step="1" value="0">
+          </label>
+        </div>
       </div>
-      <fieldset class="plain">
-        <legend>Breaks — no lectures</legend>
-        <p class="muted small">Holidays or semester breaks. Leave "To" empty for a single day.</p>
-        <div id="track-breaks" class="breaks-list"></div>
-        <button id="add-break-btn" class="button-like" type="button">+ Add break</button>
-      </fieldset>
-      <fieldset class="plain">
-        <legend>Extra lectures</legend>
-        <p class="muted small">Make-up or bonus lectures on a specific date, on top of the weekly ones.</p>
-        <div id="track-extras" class="extras-list"></div>
-        <button id="add-extra-btn" class="button-like" type="button">+ Add extra lecture</button>
-      </fieldset>
       <p id="track-preview" class="preview"></p>
-      <p class="muted small">Lectures are due by the next exam or assignment that links this track, or by semester end.</p>
-      <p id="track-errors" class="errors" role="alert"></p>
-      <div class="dialog-actions">
-        <button id="track-delete-btn" class="danger" type="button" hidden>Delete</button>
-        <span class="spacer"></span>
-        <button type="button" data-close>Cancel</button>
-        <button class="primary" type="submit">Save</button>
-      </div>
+
+      <fieldset class="plain">
+        <legend class="group-header">Breaks</legend>
+        <div id="track-breaks" class="breaks-list stack"></div>
+        <button id="add-break-btn" class="add-row" type="button">Add break</button>
+        <p class="group-footer">Holidays or semester breaks with no lectures. Leave "To" empty for a single day.</p>
+      </fieldset>
+
+      <fieldset class="plain">
+        <legend class="group-header">Extra lectures</legend>
+        <div id="track-extras" class="extras-list stack"></div>
+        <button id="add-extra-btn" class="add-row" type="button">Add extra lecture</button>
+        <p class="group-footer">Make-up or bonus lectures on a specific date, on top of the weekly ones.</p>
+      </fieldset>
+
+      <p class="group-footer">Lectures are due by the next exam or assignment that links this track, or by semester end.</p>
+
+      <button id="track-delete-btn" class="destructive-row" type="button" hidden>Delete track</button>
     </form>
   </dialog>
 
-  <dialog id="course-dialog" class="wizard">
+  <dialog id="course-dialog" class="sheet wizard">
     <form id="course-form" method="dialog" novalidate>
-      <div class="wizard-head">
-        <p id="wizard-progress-text" class="eyebrow">Step 1 of 4</p>
-        <div class="wizard-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="sheet-top">
+        <header class="sheet-bar">
+          <span class="bar-start">
+            <button id="wizard-back-btn" class="bar-btn" type="button" hidden>Back</button>
+            <button class="bar-btn" type="button" data-close>Cancel</button>
+          </span>
+          <h2 class="sheet-title">New course</h2>
+          <button id="wizard-next-btn" class="bar-btn bar-done" type="submit">Next</button>
+        </header>
+        <div class="wizard-head">
+          <div class="wizard-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <p id="wizard-progress-text" class="wizard-progress">Step 1 of 4</p>
+        </div>
+        <p id="course-errors" class="errors" role="alert"></p>
       </div>
 
       <section data-step="name" class="wizard-step">
         <h2 tabindex="-1">What's the course called?</h2>
-        <p class="muted small">Use the same name you'd look for on your timetable. Everything you add next is grouped under it.</p>
-        <label>Course name
-          <input name="courseName" dir="auto" maxlength="60" autocomplete="off" placeholder="e.g. Linear Algebra">
-        </label>
+        <p class="wizard-lede">Use the same name you'd look for on your timetable. Everything you add next is grouped under it.</p>
+        <div class="group">
+          <label>Course name
+            <input name="courseName" dir="auto" maxlength="60" autocomplete="off" placeholder="Linear Algebra">
+          </label>
+        </div>
         <p id="wizard-name-hint" class="hint" hidden></p>
       </section>
 
       <section data-step="lectures" class="wizard-step" hidden>
         <h2 tabindex="-1">Weekly lectures</h2>
-        <p class="muted small">If lectures are recorded or released on fixed days, the app keeps track of your backlog for you.</p>
-        <label class="switch-row">
-          <input name="hasLectures" type="checkbox" checked>
-          <span>This course has weekly lectures</span>
-        </label>
+        <p class="wizard-lede">If lectures are recorded or released on fixed days, the app keeps track of your backlog for you.</p>
+        <div class="group">
+          <label class="switch-row">
+            <input name="hasLectures" type="checkbox" checked>
+            <span>This course has weekly lectures</span>
+          </label>
+        </div>
         <div id="wizard-lecture-fields" class="wizard-fields">
           <fieldset class="plain">
-            <legend>Which days?</legend>
-            <div id="wizard-days" class="day-picker"></div>
+            <legend class="group-header">Which days?</legend>
+            <div class="group padded">
+              <div id="wizard-days" class="day-picker"></div>
+            </div>
           </fieldset>
-          <div class="row">
-            <label>First lecture
-              <input name="startDate" type="date">
-            </label>
-            <label>Semester ends
-              <input name="endDate" type="date">
-            </label>
+          <div class="group">
+            <div class="row">
+              <label>First lecture
+                <input name="startDate" type="date">
+              </label>
+              <label>Semester ends
+                <input name="endDate" type="date">
+              </label>
+            </div>
+            <div class="row">
+              <label>Hours per lecture
+                <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25">
+              </label>
+              <label>Watched so far
+                <input name="watched" type="number" inputmode="numeric" min="0" step="1">
+              </label>
+            </div>
           </div>
-          <div class="row">
-            <label>Hours per lecture
-              <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25">
-            </label>
-            <label>Watched so far
-              <input name="watched" type="number" inputmode="numeric" min="0" step="1">
-            </label>
-          </div>
-          <fieldset class="plain">
-            <legend>Breaks — optional</legend>
-            <p class="muted small">Holidays with no lectures. Leave "To" empty for a single day.</p>
-            <div id="wizard-breaks" class="breaks-list"></div>
-            <button id="wizard-add-break-btn" class="button-like" type="button">+ Add break</button>
-          </fieldset>
-          <fieldset class="plain">
-            <legend>Extra lectures — optional</legend>
-            <p class="muted small">Make-up or bonus lectures on a specific date, on top of the weekly ones.</p>
-            <div id="wizard-extras" class="extras-list"></div>
-            <button id="wizard-add-extra-btn" class="button-like" type="button">+ Add extra lecture</button>
-          </fieldset>
           <p id="wizard-lecture-preview" class="preview"></p>
+          <fieldset class="plain">
+            <legend class="group-header">Breaks · optional</legend>
+            <div id="wizard-breaks" class="breaks-list stack"></div>
+            <button id="wizard-add-break-btn" class="add-row" type="button">Add break</button>
+            <p class="group-footer">Holidays with no lectures. Leave "To" empty for a single day.</p>
+          </fieldset>
+          <fieldset class="plain">
+            <legend class="group-header">Extra lectures · optional</legend>
+            <div id="wizard-extras" class="extras-list stack"></div>
+            <button id="wizard-add-extra-btn" class="add-row" type="button">Add extra lecture</button>
+            <p class="group-footer">Make-up or bonus lectures on a specific date, on top of the weekly ones.</p>
+          </fieldset>
         </div>
       </section>
 
       <section data-step="deadlines" class="wizard-step" hidden>
         <h2 tabindex="-1">Exams and assignments</h2>
-        <p class="muted small">Add what you know now — you can always add more later with +.</p>
-        <div id="wizard-deadlines" class="wizard-deadlines"></div>
-        <p id="wizard-deadlines-empty" class="muted small">Nothing yet.</p>
+        <p class="wizard-lede">Add what you know now. You can always add more later with +.</p>
+        <div id="wizard-deadlines" class="wizard-deadlines stack"></div>
+        <p id="wizard-deadlines-empty" class="group-footer">Nothing yet.</p>
         <div class="wizard-add-row">
-          <button id="wizard-add-exam" class="secondary" type="button">+ Exam</button>
-          <button id="wizard-add-assignment" class="secondary" type="button">+ Assignment</button>
+          <button id="wizard-add-exam" class="add-row" type="button">Exam</button>
+          <button id="wizard-add-assignment" class="add-row" type="button">Assignment</button>
         </div>
       </section>
 
@@ -177,36 +215,33 @@
         <h2 tabindex="-1">Looks good?</h2>
         <div id="wizard-summary" class="wizard-summary"></div>
       </section>
-
-      <p id="course-errors" class="errors" role="alert"></p>
-      <div class="dialog-actions">
-        <button id="wizard-back-btn" type="button" hidden>Back</button>
-        <span class="spacer"></span>
-        <button type="button" data-close>Cancel</button>
-        <button id="wizard-next-btn" class="primary" type="submit">Next</button>
-      </div>
     </form>
   </dialog>
 
-  <dialog id="settings-dialog">
+  <dialog id="settings-dialog" class="sheet">
     <form id="settings-form" method="dialog" novalidate>
-      <h2 tabindex="-1" autofocus>Settings</h2>
-      <label>Study hours per week
-        <input name="weeklyHours" type="number" inputmode="decimal" min="1" max="168" step="0.5" required>
-      </label>
-      <p class="muted small">Used to work out how much time you have before each deadline.</p>
-      <p id="settings-errors" class="errors" role="alert"></p>
-      <h3>Backup</h3>
-      <div class="dialog-actions">
-        <button id="export-btn" type="button">Export JSON</button>
-        <label class="button-like">Import JSON
-          <input id="import-input" type="file" accept="application/json,.json" hidden>
+      <div class="sheet-top">
+        <header class="sheet-bar">
+          <button class="bar-btn" type="button" data-close>Cancel</button>
+          <h2 class="sheet-title" tabindex="-1" autofocus>Settings</h2>
+          <button class="bar-btn bar-done" type="submit">Save</button>
+        </header>
+        <p id="settings-errors" class="errors" role="alert"></p>
+      </div>
+
+      <div class="group">
+        <label>Study hours per week
+          <input name="weeklyHours" type="number" inputmode="decimal" min="1" max="168" step="0.5" required>
         </label>
       </div>
-      <div class="dialog-actions">
-        <span class="spacer"></span>
-        <button type="button" data-close>Cancel</button>
-        <button class="primary" type="submit">Save</button>
+      <p class="group-footer">Used to work out how much time you have before each deadline.</p>
+
+      <h3 class="group-header">Backup</h3>
+      <div class="group">
+        <button id="export-btn" class="group-action" type="button">Export JSON</button>
+        <label class="group-action">Import JSON
+          <input id="import-input" type="file" accept="application/json,.json" hidden>
+        </label>
       </div>
     </form>
   </dialog>

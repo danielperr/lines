@@ -4,11 +4,11 @@
 import { h } from './dom.js';
 
 export const breakRow = ({ from, to }, onChange) => {
-  const row = h('div', { class: 'break-row' },
+  const row = h('div', { class: 'break-row group' },
     h('div', { class: 'break-head' },
       h('span', {}, 'Break'),
       h('button', {
-        class: 'link-btn',
+        class: 'btn-plain destructive',
         type: 'button',
         onClick: () => { row.remove(); onChange(); },
       }, 'Remove')),

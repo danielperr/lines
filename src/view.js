@@ -86,7 +86,7 @@ const nextUpCard = (item, weeklyHours, actions) => h('section', {
   h('p', { class: 'slack' }, slackText(item)),
   effortList(item, actions),
   h('div', { class: 'next-actions' },
-    h('button', { class: 'secondary', type: 'button', onClick: () => actions.edit(item.id) }, 'Edit')));
+    h('button', { class: 'btn btn-gray', type: 'button', onClick: () => actions.edit(item.id) }, 'Edit')));
 
 const summary = (active, tracks, weeklyHours, onSettings) => {
   const trackHours = tracks.filter((t) => t.linkedTitles.length === 0).reduce((sum, t) => sum + t.hoursLeft, 0);
@@ -95,17 +95,17 @@ const summary = (active, tracks, weeklyHours, onSettings) => {
   return h('div', { class: 'summary' },
     h('span', {}, `${active.length} open · ${formatHours(total)} of work`),
     atRisk ? h('span', { class: 'risk' }, `${atRisk} at risk`) : null,
-    h('button', { class: 'chip', type: 'button', onClick: onSettings }, `${weeklyHours}h / week`));
+    h('button', { class: 'btn-plain', type: 'button', onClick: onSettings }, `${weeklyHours}h / week`));
 };
 
 const welcome = (onAddCourse) => h('div', { class: 'empty welcome' },
   h('h2', {}, 'Let\'s set up your semester'),
   h('p', { class: 'muted' }, 'Add one course at a time: its lecture days, exams and assignments. The app then works out what to do each day.'),
-  h('button', { class: 'primary', type: 'button', onClick: onAddCourse }, 'Add your first course'));
+  h('button', { class: 'btn btn-filled', type: 'button', onClick: onAddCourse }, 'Add your first course'));
 
 const coursesHead = (hidden, onAddCourse) => (hidden ? null : h('div', { class: 'section-head' },
   h('h2', { class: 'section-title' }, 'Courses'),
-  h('button', { class: 'chip', type: 'button', onClick: onAddCourse }, '+ Course')));
+  h('button', { class: 'btn-plain', type: 'button', onClick: onAddCourse }, '+ Course')));
 
 export const renderApp = (root, { plan, weeklyHours, actions }) => {
   const { active, done, tracks } = plan;

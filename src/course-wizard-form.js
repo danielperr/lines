@@ -13,7 +13,7 @@ import { deadlineRow, readDeadline, renumberRows, setLecturesAvailable } from '.
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const STEP_NAMES = Object.freeze({ name: 'Name', lectures: 'Lectures', deadlines: 'Exams & assignments', review: 'Review' });
 
-const summaryList = (summary) => h('div', { class: 'wizard-summary-body' },
+const summaryList = (summary) => h('div', { class: 'wizard-summary-body group' },
   h('h3', {}, 'Lectures'),
   h('p', {}, summary.lectures ?? 'No weekly lectures'),
   h('h3', {}, 'Exams & assignments'),

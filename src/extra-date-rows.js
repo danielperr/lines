@@ -4,10 +4,10 @@
 import { h } from './dom.js';
 
 export const extraDateRow = (iso, onChange) => {
-  const row = h('div', { class: 'extra-row' },
+  const row = h('div', { class: 'extra-row group' },
     h('label', {}, 'Extra lecture', h('input', { type: 'date', 'data-extra': 'date', value: iso })),
     h('button', {
-      class: 'link-btn',
+      class: 'btn-plain destructive',
       type: 'button',
       'aria-label': 'Remove this extra lecture',
       onClick: () => { row.remove(); onChange(); },

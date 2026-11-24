@@ -34,7 +34,7 @@ const partEditor = (part, tracks, onRemove) => {
       h('label', {}, 'Already done', numberInput('doneUnits', part.doneUnits ?? 0, { inputmode: 'numeric', min: 0, step: 1 }))));
   const trackFields = h('div', { class: 'track-fields', hidden: !isTrack },
     h('label', {}, 'Lecture track', trackSelect(tracks, part.trackId)),
-    h('p', { class: 'muted small' }, 'Counts the track\'s lectures released before this due date (and after any earlier linked deadline).'));
+    h('p', { class: 'group-note' }, 'Counts the track\'s lectures released before this due date (and after any earlier linked deadline).'));
   select.addEventListener('change', () => {
     const trackChosen = select.value === TRACK_PART;
     unitFields.hidden = trackChosen;
@@ -43,7 +43,7 @@ const partEditor = (part, tracks, onRemove) => {
     unit.value = EFFORT_PRESETS[select.value].unit;
     hoursPerUnit.value = EFFORT_PRESETS[select.value].hoursPerUnit;
   });
-  return h('fieldset', { class: 'part-editor', dataset: { partId: part.id } },
+  return h('fieldset', { class: 'part-editor group', dataset: { partId: part.id } },
     h('div', { class: 'part-editor-top' },
       select,
       h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Remove this part', onClick: onRemove }, '✕')),

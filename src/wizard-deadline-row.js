@@ -26,10 +26,10 @@ export const setLecturesAvailable = (container, available) => {
 
 export const deadlineRow = (deadline, { onRemove, lecturesAvailable }) => {
   const { kind } = deadline;
-  const row = h('fieldset', { class: 'wizard-deadline', dataset: { kind } },
+  const row = h('fieldset', { class: 'wizard-deadline group', dataset: { kind } },
     h('div', { class: 'break-head' },
       h('span', { class: 'wizard-deadline-title' }, kindLabel(kind)),
-      h('button', { class: 'link-btn', type: 'button', onClick: () => onRemove(row) }, 'Remove')),
+      h('button', { class: 'btn-plain destructive', type: 'button', onClick: () => onRemove(row) }, 'Remove')),
     h('label', {}, 'Title',
       h('input', { name: 'title', dir: 'auto', maxlength: 80, value: deadline.title, placeholder: TITLE_PLACEHOLDER[kind] })),
     h('div', { class: 'row' },
