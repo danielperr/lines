@@ -32,7 +32,7 @@ export const blankDraft = (today) => ({
   name: '',
   hasLectures: true,
   lectures: {
-    weekdays: [], startDate: today, endDate: '', hoursPerLecture: DEFAULT_HOURS_PER_LECTURE, watched: 0, breaks: [],
+    weekdays: [], startDate: today, endDate: '', hoursPerLecture: DEFAULT_HOURS_PER_LECTURE, watched: 0, breaks: [], extraDates: [],
   },
   deadlines: [],
 });
@@ -40,7 +40,13 @@ export const blankDraft = (today) => ({
 const hasAmount = (deadline) => deadline.amount !== '' && Number.isFinite(Number(deadline.amount)) && Number(deadline.amount) > 0;
 const linksLectures = (draft, deadline) => draft.hasLectures && deadline.coversLectures;
 
-const trackFrom = (draft, id) => ({ id, name: draft.name.trim(), ...draft.lectures, breaks: [...draft.lectures.breaks] });
+const trackFrom = (draft, id) => ({
+  id,
+  name: draft.name.trim(),
+  ...draft.lectures,
+  breaks: [...draft.lectures.breaks],
+  extraDates: [...(draft.lectures.extraDates ?? [])].sort(),
+});
 
 // ---- Validation per step ----
 
@@ -121,8 +127,10 @@ const lectureLine = (draft, today) => {
   if (!draft.hasLectures) return null;
   const track = trackFrom(draft, 'draft');
   const days = [...track.weekdays].sort().map((d) => WEEKDAY_NAMES[d]).join(', ');
+  const extras = track.extraDates.length ? `${track.extraDates.length} extra` : '';
+  const schedule = [days, extras].filter(Boolean).join(' + ');
   const total = lectureDates(track).length;
-  return `${days} · ${plural(total, 'lectures')} (${releasedBy(track, today)} out, ${track.watched} watched)`;
+  return `${schedule} · ${plural(total, 'lectures')} (${releasedBy(track, today)} out, ${track.watched} watched)`;
 };
 
 const deadlineDetail = (draft, deadline) => [

@@ -34,6 +34,7 @@ const validTrack = {
   hoursPerLecture: 1.5,
   watched: 5,
   breaks: [{ from: '2026-12-24', to: '2027-01-02' }],
+  extraDates: ['2027-01-08'],
 };
 
 const linkedItem = { ...validItem, id: 'a2', parts: [{ id: 'p9', type: 'track', trackId: 'trk' }] };

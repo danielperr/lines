@@ -1,6 +1,7 @@
 import { h, localTodayIso, newId } from './dom.js';
 import { WEEKDAY_NAMES, lectureDates, releasedBy, validateTrack } from './tracks.js';
 import { breakRow, readBreaks, wireAddBreak } from './break-rows.js';
+import { fillExtraDates, readExtraDates, wireAddExtraDate } from './extra-date-rows.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const DEFAULT_HOURS_PER_LECTURE = 1.5;
@@ -17,6 +18,7 @@ export const createTrackForm = ({ dialog, onSave, onDelete }) => {
   const deleteBtn = form.querySelector('#track-delete-btn');
   const breaksEl = form.querySelector('#track-breaks');
   const addBreakBtn = form.querySelector('#add-break-btn');
+  const extrasEl = form.querySelector('#track-extras');
   let editing = null;
 
   daysEl.replaceChildren(...WEEK_ORDER.map((d) => h('label', { class: 'day-toggle' },
@@ -32,6 +34,7 @@ export const createTrackForm = ({ dialog, onSave, onDelete }) => {
     hoursPerLecture: Number(form.elements.hoursPerLecture.value),
     watched: Number(form.elements.watched.value || 0),
     breaks: readBreaks(breaksEl),
+    extraDates: readExtraDates(extrasEl),
   });
 
   const updatePreview = () => {
@@ -61,6 +64,7 @@ export const createTrackForm = ({ dialog, onSave, onDelete }) => {
       el.checked = Boolean(track?.weekdays.includes(Number(el.value)));
     });
     breaksEl.replaceChildren(...(track?.breaks ?? []).map((b) => breakRow(b, updatePreview)));
+    fillExtraDates(extrasEl, track?.extraDates, updatePreview);
     updatePreview();
     dialog.showModal();
   };
@@ -68,6 +72,7 @@ export const createTrackForm = ({ dialog, onSave, onDelete }) => {
   form.addEventListener('input', updatePreview);
 
   wireAddBreak(addBreakBtn, breaksEl, updatePreview);
+  wireAddExtraDate(form.querySelector('#add-extra-btn'), extrasEl, updatePreview);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();

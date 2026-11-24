@@ -21,6 +21,7 @@ const APP_SHELL = [
   './src/course-wizard.js',
   './src/dates.js',
   './src/dom.js',
+  './src/extra-date-rows.js',
   './src/item-form.js',
   './src/offline.js',
   './src/overview-view.js',

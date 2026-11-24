@@ -7,6 +7,7 @@ import { WIZARD_STEPS, blankDeadline, blankDraft, buildCourse, courseSummary, st
 import { courseKey } from './overview.js';
 import { WEEKDAY_NAMES, lectureDates, releasedBy } from './tracks.js';
 import { readBreaks, wireAddBreak } from './break-rows.js';
+import { readExtraDates, wireAddExtraDate } from './extra-date-rows.js';
 import { deadlineRow, readDeadline, renumberRows, setLecturesAvailable } from './wizard-deadline-row.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
@@ -33,6 +34,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
   const errorsEl = $('#course-errors');
   const deadlinesEl = $('#wizard-deadlines');
   const breaksEl = $('#wizard-breaks');
+  const extrasEl = $('#wizard-extras');
   const backBtn = $('#wizard-back-btn');
   const nextBtn = $('#wizard-next-btn');
   let stepIndex = 0;
@@ -51,6 +53,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
       hoursPerLecture: Number(form.elements.hoursPerLecture.value),
       watched: Number(form.elements.watched.value || 0),
       breaks: readBreaks(breaksEl),
+      extraDates: readExtraDates(extrasEl),
     },
     deadlines: [...deadlinesEl.querySelectorAll('.wizard-deadline')].map(readDeadline),
   });
@@ -117,6 +120,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
     form.elements.hoursPerLecture.value = draft.lectures.hoursPerLecture;
     form.elements.watched.value = draft.lectures.watched;
     breaksEl.replaceChildren();
+    extrasEl.replaceChildren();
     deadlinesEl.replaceChildren();
     updateNameHint();
     syncLectureToggle();
@@ -158,6 +162,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
   form.elements.hasLectures.addEventListener('change', syncLectureToggle);
   $('#wizard-lecture-fields').addEventListener('input', updateLecturePreview);
   wireAddBreak($('#wizard-add-break-btn'), breaksEl, updateLecturePreview);
+  wireAddExtraDate($('#wizard-add-extra-btn'), extrasEl, updateLecturePreview);
   $('#wizard-add-exam').addEventListener('click', () => addDeadline('exam'));
   $('#wizard-add-assignment').addEventListener('click', () => addDeadline('assignment'));
 

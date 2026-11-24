@@ -9,7 +9,11 @@ const trackPill = (track) => {
   return statusPill(trackTone(track), `${track.behind} behind`);
 };
 
-const scheduleText = (track) => track.weekdays.slice().sort().map((d) => WEEKDAY_NAMES[d]).join(', ');
+const scheduleText = (track) => {
+  const days = track.weekdays.slice().sort().map((d) => WEEKDAY_NAMES[d]).join(', ');
+  const extras = track.extraDates?.length ? `${track.extraDates.length} extra` : '';
+  return [days, extras].filter(Boolean).join(' + ');
+};
 
 const forText = (track) => (track.linkedTitles.length
   ? `For ${track.linkedTitles.join(', ')}`

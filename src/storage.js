@@ -14,11 +14,17 @@ const pick = (raw, fields) => Object.fromEntries(fields.map((key) => [key, raw?.
 
 const normalizePart = (raw) => pick(raw, raw?.type === TRACK_PART ? TRACK_PART_FIELDS : UNIT_PART_FIELDS);
 
-/** Keep only known fields; tracks saved before breaks existed get none. */
+const sortedIfList = (list) => (Array.isArray(list) ? [...list].sort() : list);
+
+/** Keep only known fields; tracks saved before breaks or extra lectures existed get none. */
 const normalizeTrack = (raw) => {
   const track = pick(raw, TRACK_FIELDS);
   const breaks = raw?.breaks ?? [];
-  return { ...track, breaks: Array.isArray(breaks) ? breaks.map((b) => pick(b, BREAK_FIELDS)) : breaks };
+  return {
+    ...track,
+    breaks: Array.isArray(breaks) ? breaks.map((b) => pick(b, BREAK_FIELDS)) : breaks,
+    extraDates: sortedIfList(raw?.extraDates ?? []),
+  };
 };
 
 const isLegacyItem = (raw) => !Array.isArray(raw?.parts) && raw?.totalUnits !== undefined;
