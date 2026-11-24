@@ -25,16 +25,16 @@
   <button id="add-btn" class="fab" type="button" aria-label="Add deadline">+</button>
 
   <dialog id="item-dialog">
-    <form id="item-form" method="dialog" novalidate>
+    <form data-form-type="other" id="item-form" method="dialog" novalidate>
       <h2 id="item-dialog-title" tabindex="-1" autofocus>New deadline</h2>
       <label>Title
-        <input name="title" dir="auto" required maxlength="80" placeholder="e.g. Midterm, HW3">
+        <input data-form-type="other" name="title" dir="auto" required maxlength="80" placeholder="e.g. Midterm, HW3">
       </label>
       <label>Course
-        <input name="course" dir="auto" maxlength="60" placeholder="e.g. Linear Algebra">
+        <input data-form-type="other" name="course" dir="auto" maxlength="60" placeholder="e.g. Linear Algebra">
       </label>
       <label>Due date
-        <input name="due" type="date" required>
+        <input data-form-type="other" name="due" type="date" required>
       </label>
       <div class="parts-header">
         <h3>Effort</h3>
@@ -53,10 +53,10 @@
   </dialog>
 
   <dialog id="track-dialog">
-    <form id="track-form" method="dialog" novalidate>
+    <form data-form-type="other" id="track-form" method="dialog" novalidate>
       <h2 id="track-dialog-title" tabindex="-1" autofocus>New lecture track</h2>
       <label>Course
-        <input name="name" dir="auto" required maxlength="60" placeholder="e.g. Algorithms">
+        <input data-form-type="other" name="name" dir="auto" required maxlength="60" placeholder="e.g. Algorithms">
       </label>
       <fieldset class="plain">
         <legend>Lecture days</legend>
@@ -64,18 +64,18 @@
       </fieldset>
       <div class="row">
         <label>First lecture
-          <input name="startDate" type="date" required>
+          <input data-form-type="other" name="startDate" type="date" required>
         </label>
         <label>Semester ends
-          <input name="endDate" type="date" required>
+          <input data-form-type="other" name="endDate" type="date" required>
         </label>
       </div>
       <div class="row">
         <label>Hours per lecture
-          <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" required>
+          <input data-form-type="other" name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" required>
         </label>
         <label>Watched so far
-          <input name="watched" type="number" inputmode="numeric" min="0" step="1" value="0">
+          <input data-form-type="other" name="watched" type="number" inputmode="numeric" min="0" step="1" value="0">
         </label>
       </div>
       <fieldset class="plain">
@@ -103,7 +103,7 @@
   </dialog>
 
   <dialog id="course-dialog" class="wizard">
-    <form id="course-form" method="dialog" novalidate>
+    <form data-form-type="other" id="course-form" method="dialog" novalidate>
       <div class="wizard-head">
         <p id="wizard-progress-text" class="eyebrow">Step 1 of 4</p>
         <div class="wizard-dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
@@ -113,7 +113,7 @@
         <h2 tabindex="-1">What's the course called?</h2>
         <p class="muted small">Use the same name you'd look for on your timetable. Everything you add next is grouped under it.</p>
         <label>Course name
-          <input name="courseName" dir="auto" maxlength="60" autocomplete="off" placeholder="e.g. Linear Algebra">
+          <input data-form-type="other" name="courseName" dir="auto" maxlength="60" autocomplete="off" placeholder="e.g. Linear Algebra">
         </label>
         <p id="wizard-name-hint" class="hint" hidden></p>
       </section>
@@ -122,7 +122,7 @@
         <h2 tabindex="-1">Weekly lectures</h2>
         <p class="muted small">If lectures are recorded or released on fixed days, the app keeps track of your backlog for you.</p>
         <label class="switch-row">
-          <input name="hasLectures" type="checkbox" checked>
+          <input data-form-type="other" name="hasLectures" type="checkbox" checked>
           <span>This course has weekly lectures</span>
         </label>
         <div id="wizard-lecture-fields" class="wizard-fields">
@@ -132,18 +132,18 @@
           </fieldset>
           <div class="row">
             <label>First lecture
-              <input name="startDate" type="date">
+              <input data-form-type="other" name="startDate" type="date">
             </label>
             <label>Semester ends
-              <input name="endDate" type="date">
+              <input data-form-type="other" name="endDate" type="date">
             </label>
           </div>
           <div class="row">
             <label>Hours per lecture
-              <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25">
+              <input data-form-type="other" name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25">
             </label>
             <label>Watched so far
-              <input name="watched" type="number" inputmode="numeric" min="0" step="1">
+              <input data-form-type="other" name="watched" type="number" inputmode="numeric" min="0" step="1">
             </label>
           </div>
           <fieldset class="plain">
@@ -189,10 +189,10 @@
   </dialog>
 
   <dialog id="settings-dialog">
-    <form id="settings-form" method="dialog" novalidate>
+    <form data-form-type="other" id="settings-form" method="dialog" novalidate>
       <h2 tabindex="-1" autofocus>Settings</h2>
       <label>Study hours per week
-        <input name="weeklyHours" type="number" inputmode="decimal" min="1" max="168" step="0.5" required>
+        <input data-form-type="other" name="weeklyHours" type="number" inputmode="decimal" min="1" max="168" step="0.5" required>
       </label>
       <p class="muted small">Used to work out how much time you have before each deadline.</p>
       <p id="settings-errors" class="errors" role="alert"></p>
@@ -200,7 +200,7 @@
       <div class="dialog-actions">
         <button id="export-btn" type="button">Export JSON</button>
         <label class="button-like">Import JSON
-          <input id="import-input" type="file" accept="application/json,.json" hidden>
+          <input data-form-type="other" id="import-input" type="file" accept="application/json,.json" hidden>
         </label>
       </div>
       <div class="dialog-actions">
