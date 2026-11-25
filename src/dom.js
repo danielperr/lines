@@ -1,8 +1,20 @@
 // Tiny DOM helpers. Text always goes through textContent, so user data can never inject HTML.
 
+/**
+ * Tells password managers a field holds no credentials. Dashlane reads
+ * data-form-type (https://dashlane.github.io/SAWF/); without it, its autofill
+ * reacted to newly focused fields and could close the tab.
+ */
+export const NOT_CREDENTIALS = Object.freeze({ 'data-form-type': 'other' });
+
+const FIELD_TAGS = new Set(['input', 'select', 'textarea']);
+
+/** Props for a new element; form fields also get NOT_CREDENTIALS (props win). */
+export const withFieldDefaults = (tag, props) => (FIELD_TAGS.has(tag) ? { ...NOT_CREDENTIALS, ...props } : props);
+
 export const h = (tag, props = {}, ...children) => {
   const el = document.createElement(tag);
-  Object.entries(props).forEach(([key, value]) => {
+  Object.entries(withFieldDefaults(tag, props)).forEach(([key, value]) => {
     if (value === undefined || value === null || value === false) return;
     if (key === 'class') el.className = value;
     else if (key === 'style') el.style.cssText = value;
