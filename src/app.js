@@ -131,11 +131,20 @@ const courseEditForm = createCourseEditForm({
 });
 const markCourseEditClean = guardDialog($('#course-edit-dialog'));
 
+const colorOf = (courseId) => colorsById(state.courses).get(courseId);
+
+// The milestone sheet takes the color of the course it belongs to.
+const openMilestone = (courseId, milestone, kind) => {
+  $('#milestone-dialog').dataset.color = colorOf(courseId);
+  milestoneForm.open(courseId, milestone, kind);
+  markMilestoneClean();
+};
+
 const detailActions = (courseId) => ({
   watch: (delta) => watch(courseId, delta),
   stepPrep: (milestoneId, delta) => prepStep(courseId, milestoneId, delta),
-  editMilestone: (id) => { milestoneForm.open(courseId, findCourse(courseId)?.milestones.find((m) => m.id === id)); markMilestoneClean(); },
-  addMilestone: (kind) => { milestoneForm.open(courseId, null, kind); markMilestoneClean(); },
+  editMilestone: (id) => openMilestone(courseId, findCourse(courseId)?.milestones.find((m) => m.id === id)),
+  addMilestone: (kind) => openMilestone(courseId, null, kind),
   cancelLecture: (iso) => lectureChange(courseId, iso, 'cancel'),
   addLecture: (iso) => lectureChange(courseId, iso, 'add'),
 });
@@ -149,6 +158,7 @@ const renderDetail = (plan) => {
     return;
   }
   $('#course-detail-title').textContent = course.name;
+  detailDialog.dataset.color = colorOf(course.id);
   renderCourseDetail($('#course-detail-body'), {
     course,
     planned: plan.courses.find((c) => c.id === course.id),

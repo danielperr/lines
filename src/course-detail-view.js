@@ -4,14 +4,25 @@
 import { daysBetween } from './dates.js';
 import { h, formatDate, formatRelativeDays, formatShortDate } from './dom.js';
 import { courseTimeline } from './course/timeline.js';
-import { kindLabel, lectureLine, prepLine, splitTimeline, timelineRow } from './detail-model.js';
-import { stepButtons } from './view-parts.js';
+import { detailHeader, kindLabel, lectureLine, prepLine, splitTimeline, timelineRow } from './detail-model.js';
+import { progressBar, stepButtons } from './view-parts.js';
 
-const statusBlock = (planned) => h('div', { class: `detail-status status-${planned.status}` },
-  h('p', { class: 'detail-status-text' }, planned.statusText),
-  planned.nextPrep
-    ? h('p', { class: 'muted' }, `${planned.nextPrep.title} prep starts ${formatDate(planned.nextPrep.opensOn)}`)
-    : null);
+// Header band in the course's solid color. The name repeats the sheet title,
+// which stays the dialog's accessible name, so it is hidden from screen readers.
+const headerBand = (planned) => {
+  const head = detailHeader(planned);
+  return h('section', { class: `detail-hero status-${head.status}`, 'aria-label': 'Status' },
+    h('div', { class: 'detail-hero-top' },
+      h('p', { class: 'detail-hero-name', 'aria-hidden': 'true' }, head.name),
+      h('span', { class: 'pill' }, head.pillText)),
+    h('p', { class: 'detail-hero-status' }, head.statusText),
+    head.progress === null ? null : h('div', { class: 'detail-hero-progress' },
+      progressBar(head.progress),
+      h('span', { class: 'detail-hero-progress-text' }, head.progressText)),
+    planned.nextPrep
+      ? h('p', { class: 'detail-hero-note' }, `${planned.nextPrep.title} prep starts ${formatDate(planned.nextPrep.opensOn)}`)
+      : null);
+};
 
 const addLectureRow = (onAdd) => {
   const input = h('input', { type: 'date', 'aria-label': 'Date of the extra lecture' });
@@ -97,7 +108,7 @@ const timelineSection = (course, todayIso, actions) => {
  */
 export const renderCourseDetail = (body, { course, planned, todayIso, actions }) => {
   body.replaceChildren(...[
-    statusBlock(planned),
+    headerBand(planned),
     ...lecturesSection(course, planned, actions),
     ...milestonesSection(course, todayIso, actions),
     ...timelineSection(course, todayIso, actions),

@@ -296,11 +296,43 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 
 .sheet-content { display: grid; gap: 8px; padding: 0 var(--gutter) calc(24px + env(safe-area-inset-bottom)); }
 .detail-body { display: grid; gap: 8px; }
-.detail-status { padding: 4px var(--gutter) 0; }
-.detail-status-text { margin: 0; font-size: var(--text-body); font-weight: 600; color: var(--status); }
-.detail-status.status-ok .detail-status-text, .detail-status.status-done .detail-status-text { color: var(--text); }
-.detail-status .muted { margin: 2px 0 0; font-size: var(--text-sub); }
-.detail-body .list { background: var(--sheet-group); border-radius: var(--radius-group); box-shadow: none; }
+.detail-body .list { background: var(--sheet-group); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+
+/* The header band shows the name, so the bar title is kept for screen readers only. */
+#course-detail .sheet-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Header band: the one solid block in the sheet, in the course color. */
+.detail-hero {
+  display: grid;
+  gap: 8px;
+  padding: 16px var(--gutter) 18px;
+  border-radius: var(--radius-card);
+  background: var(--course-solid);
+  color: var(--course-on);
+  box-shadow: var(--shadow-card);
+}
+.detail-hero p { margin: 0; }
+.detail-hero-top { display: flex; align-items: flex-start; gap: 12px; }
+.detail-hero-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+.detail-hero .pill { flex: none; margin-top: 4px; background: var(--surface); }
+.detail-hero.status-done .pill { color: var(--muted); }
+.detail-hero-status { font-size: var(--text-body); font-weight: 600; }
+.detail-hero-progress { display: flex; align-items: center; gap: 10px; }
+.detail-hero-progress .progress { flex: 1; background: color-mix(in srgb, var(--course-on) 22%, transparent); }
+.detail-hero-progress .progress-fill { background: var(--course-on); }
+.detail-hero-progress-text { flex: none; font-size: var(--text-foot); font-weight: 700; font-variant-numeric: tabular-nums; }
+.detail-hero-note { font-size: var(--text-sub); }
 
 .detail-row { display: flex; align-items: center; gap: 12px; min-height: var(--row-height); padding: 8px 0; }
 .detail-row-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
@@ -323,8 +355,11 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .timeline-out .timeline-title { font-weight: 600; }
 .timeline-cancelled .timeline-title { color: var(--muted); text-decoration: line-through; }
 .timeline-milestone .timeline-title { font-weight: 700; color: var(--course-ink); }
-.timeline-today { min-height: 28px; }
-.timeline-today .timeline-title, .timeline-today .timeline-date { color: var(--behind); font-weight: 600; font-size: var(--text-foot); text-transform: uppercase; letter-spacing: 0.02em; }
+/* "Today" marker: a pill in the course color across the timeline. */
+.timeline-today { min-height: 32px; }
+.timeline-today .timeline-date { visibility: hidden; }
+.timeline-today .timeline-title { flex: none; padding: 2px 10px; border-radius: var(--radius-pill); background: var(--course-solid); color: var(--course-on); font-weight: 700; font-size: var(--text-foot); text-transform: uppercase; letter-spacing: 0.04em; }
+.timeline-today::after { content: ""; flex: 1; height: 2px; border-radius: 1px; background: var(--course-solid); }
 
 
 /* ---- Floating add button ---- */

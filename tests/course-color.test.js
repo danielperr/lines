@@ -103,3 +103,18 @@ test('colorsById resolves every course color by its stored position', () => {
   const map = colorsById([course('a'), course('b', 'pink'), course('c')]);
   assert.deepEqual([...map], [['a', COLOR_KEYS[0]], ['b', 'pink'], ['c', COLOR_KEYS[2]]]);
 });
+
+// Course-colored text (steppers, add buttons, milestone titles) also sits on the
+// sheet backgrounds: --sheet-group and --sheet-bg in styles.css.
+const SHEET_BACKGROUNDS = Object.freeze({ light: ['#ffffff', '#f6f5f2'], dark: ['#232227', '#161518'] });
+
+test('course ink text meets 4.5:1 on the sheet backgrounds in both modes', () => {
+  for (const key of COLOR_KEYS) {
+    for (const mode of ['light', 'dark']) {
+      for (const bg of SHEET_BACKGROUNDS[mode]) {
+        const ratio = contrast(PALETTE[key][mode].ink, bg);
+        assert.ok(ratio >= 4.5, `${key} ${mode}: ink on ${bg} is ${ratio.toFixed(2)}:1`);
+      }
+    }
+  }
+});

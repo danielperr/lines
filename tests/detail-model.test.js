@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { lectureLine, prepLine, splitTimeline, timelineRow } from '../src/detail-model.js';
+import { detailHeader, lectureLine, prepLine, splitTimeline, timelineRow } from '../src/detail-model.js';
 
 test('lecture line shows watched, total and how many are out', () => {
   assert.equal(lectureLine({ watched: 5, total: 24, released: 8 }), '5 of 24 watched · 8 out');
@@ -43,4 +43,35 @@ test('splitTimeline folds everything before today into an earlier part', () => {
     { type: 'lecture', date: '2026-11-16' }, { type: 'today', date: '2026-11-23' }, { type: 'lecture', date: '2026-11-23' },
   ];
   assert.deepEqual(splitTimeline(entries), { earlier: [entries[0]], upcoming: entries.slice(1) });
+});
+
+const planned = (over = {}) => ({
+  id: 'c1', name: 'Algebra', status: 'behind', statusText: '5 lectures behind',
+  signals: [{ status: 'behind', text: '5 lectures behind' }],
+  lectures: { watched: 6, total: 24, released: 11 }, nextPrep: null, ...over,
+});
+
+test('the detail header carries name, short pill, full status and lecture progress', () => {
+  assert.deepEqual(detailHeader(planned()), {
+    name: 'Algebra',
+    status: 'behind',
+    pillText: 'Behind',
+    statusText: '5 lectures behind',
+    progress: 0.25,
+    progressText: '6 of 24 lectures',
+  });
+});
+
+test('the detail header has no progress for a course without lectures', () => {
+  const header = detailHeader(planned({ lectures: null, status: 'ok', statusText: 'On track' }));
+  assert.equal(header.progress, null);
+  assert.equal(header.progressText, null);
+  assert.equal(header.pillText, 'On track');
+});
+
+test('the detail header shows a finished course as done', () => {
+  const header = detailHeader(planned({ status: 'done', statusText: 'All done', lectures: { watched: 24, total: 24, released: 24 } }));
+  assert.equal(header.pillText, 'Done');
+  assert.equal(header.progress, 1);
+  assert.equal(header.progressText, 'All 24 lectures');
 });

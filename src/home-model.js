@@ -54,7 +54,7 @@ export const todaySummary = (tasks) => {
   return `${amount(tasks.length, 'tasks')} · about ${formatHours(hours)}`;
 };
 
-const PILL_TEXT = Object.freeze({ ok: 'On track', tight: 'Tight', behind: 'Behind', overdue: 'Overdue', done: 'Done' });
+export const PILL_TEXT = Object.freeze({ ok: 'On track', tight: 'Tight', behind: 'Behind', overdue: 'Overdue', done: 'Done' });
 const AT_RISK = new Set(['behind', 'overdue']);
 
 /** The header pill: how many courses need attention, worst first. */

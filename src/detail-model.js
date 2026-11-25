@@ -1,6 +1,8 @@
 // Text and per-row actions for the course detail sheet. Pure — dates stay ISO
 // and are formatted by the view.
 
+import { PILL_TEXT } from './home-model.js';
+
 const KIND_LABEL = Object.freeze({ exam: 'Exam', assignment: 'Assignment' });
 
 export const kindLabel = (kind) => KIND_LABEL[kind];
@@ -37,4 +39,20 @@ export const timelineRow = (entry) => ROWS[entry.type](entry);
 export const splitTimeline = (entries) => {
   const at = entries.findIndex((e) => e.type === 'today');
   return at === -1 ? { earlier: [], upcoming: entries } : { earlier: entries.slice(0, at), upcoming: entries.slice(at) };
+};
+
+const progressText = ({ watched, total }) => (watched >= total ? `All ${total} lectures` : `${watched} of ${total} lectures`);
+
+/** The colored header band: name, short status pill, full status and lecture progress. */
+export const detailHeader = (planned) => {
+  const { lectures } = planned;
+  const hasLectures = Boolean(lectures && lectures.total);
+  return {
+    name: planned.name,
+    status: planned.status,
+    pillText: PILL_TEXT[planned.status],
+    statusText: planned.statusText,
+    progress: hasLectures ? Math.min(1, lectures.watched / lectures.total) : null,
+    progressText: hasLectures ? progressText(lectures) : null,
+  };
 };
