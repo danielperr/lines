@@ -3,6 +3,7 @@
 // No DOM — safe to unit test in Node.
 
 import { isValidIsoDate } from './dates.js';
+import { isColorKey } from './course/color.js';
 import { PREP_PRESETS } from './course/milestone.js';
 import { WEEKDAY_NAMES, lectureDates, releasedBy, validateSchedule } from './course/schedule.js';
 
@@ -24,8 +25,9 @@ export const blankDeadline = (kind) => ({
   kind, title: '', due: '', amount: '',
 });
 
-export const blankDraft = (today) => ({
+export const blankDraft = (today, color = null) => ({
   name: '',
+  color,
   hasLectures: true,
   lectures: {
     weekdays: [], startDate: today, endDate: '', hoursPerLecture: DEFAULT_HOURS_PER_LECTURE, watched: 0, breaks: [], extraDates: [],
@@ -122,6 +124,7 @@ const milestoneFrom = (deadline, id) => ({
 export const buildCourse = (draft, makeId) => ({
   id: makeId(),
   name: draft.name.trim(),
+  ...(isColorKey(draft.color) ? { color: draft.color } : {}),
   schedule: draft.hasLectures ? scheduleFrom(draft) : null,
   watched: draft.hasLectures ? draft.lectures.watched : 0,
   milestones: draft.deadlines.map((deadline) => milestoneFrom(deadline, makeId())),

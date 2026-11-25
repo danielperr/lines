@@ -46,6 +46,9 @@ export const COLOR_KEYS = Object.freeze(Object.keys(PALETTE));
 
 export const isColorKey = (value) => typeof value === 'string' && Object.hasOwn(PALETTE, value);
 
+/** "Violet" for 'violet': the swatch's accessible name. */
+export const colorLabel = (key) => key.charAt(0).toUpperCase() + key.slice(1);
+
 /** The course's color key: its stored one, or a fallback from its position. */
 export const courseColor = (course, index) =>
   (isColorKey(course.color) ? course.color : COLOR_KEYS[index % COLOR_KEYS.length]);

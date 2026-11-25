@@ -525,7 +525,7 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
 .group .row { display: contents; }
 
 /* Every row gets a hairline on top; the first one is pulled up and clipped by the group. */
-.group :is(label:not(.day-toggle), .break-head, .group-action) {
+.group :is(label:not(.day-toggle, .swatch), .break-head, .group-action) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -539,12 +539,12 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
   color: var(--text);
   white-space: nowrap;
 }
-.group label:not(.day-toggle):focus-within { background: var(--highlight); }
+.group label:not(.day-toggle, .swatch):focus-within { background: var(--highlight); }
 
 .group-action { background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; color: var(--course-ink) !important; font-weight: 600 !important; text-align: start; cursor: pointer; }
 
 /* Values sit on the right, like a Settings row. */
-.group label > :is(input, select):not([type="checkbox"]) {
+.group label > :is(input, select):not([type="checkbox"], [type="radio"]) {
   flex: 1 1 50%;
   min-width: 0;
   width: auto;
@@ -560,7 +560,7 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
 }
 .group label > input::placeholder { color: var(--faint); }
 .group label > :is(input, select):focus { outline: none; }
-.group label > input { caret-color: var(--accent); }
+.group label > input { caret-color: var(--course-ink); }
 
 /* Compact date picker: a gray capsule, as in iOS forms. */
 .group label > input[type="date"] {
@@ -570,7 +570,7 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
   border-radius: var(--radius-pill);
   background: var(--fill);
 }
-.group label > input[type="date"]:focus { box-shadow: 0 0 0 2px var(--accent); }
+.group label > input[type="date"]:focus { box-shadow: 0 0 0 2px var(--course-solid); }
 
 input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -676,6 +676,26 @@ input[type="date"]::-webkit-date-and-time-value { text-align: end; margin: 0; }
 }
 .day-toggle input:checked + span { background: var(--course-solid); color: var(--course-on); font-weight: 700; }
 .day-toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---- Color swatches: a radio group of course-colored dots ---- */
+
+.swatches { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; justify-items: center; }
+.swatch { position: relative; display: block; width: 100%; max-width: 44px; aspect-ratio: 1; cursor: pointer; }
+.swatch input { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.swatch-dot {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--course-solid);
+  pointer-events: none;
+  transition: transform 0.15s;
+}
+.swatch input:checked + .swatch-dot { box-shadow: 0 0 0 2px var(--sheet-group), 0 0 0 4px var(--text); transform: scale(0.86); }
+.swatch input:checked + .swatch-dot::after { content: "✓"; color: var(--course-on); font-weight: 800; font-size: var(--text-sub); }
+.swatch input:focus-visible + .swatch-dot { outline: 2px solid var(--text); outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .swatch-dot { transition: none; } }
 
 /* ---- Add-course wizard ---- */
 

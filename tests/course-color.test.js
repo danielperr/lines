@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  COLOR_KEYS, PALETTE, assignColor, colorsById, courseColor, isColorKey, nextColor,
+  COLOR_KEYS, PALETTE, assignColor, colorLabel, colorsById, courseColor, isColorKey, nextColor,
 } from '../src/course/color.js';
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -117,4 +117,10 @@ test('course ink text meets 4.5:1 on the sheet backgrounds in both modes', () =>
       }
     }
   }
+});
+
+test('colorLabel names each palette color for people', () => {
+  assert.equal(colorLabel('violet'), 'Violet');
+  assert.equal(colorLabel('slate'), 'Slate');
+  assert.deepEqual(COLOR_KEYS.map(colorLabel).every((label) => /^[A-Z][a-z]+$/.test(label)), true);
 });

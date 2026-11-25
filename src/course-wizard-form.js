@@ -8,6 +8,7 @@ import { WEEKDAY_NAMES, lectureDates, releasedBy } from './course/schedule.js';
 import { readBreaks, wireAddBreak } from './break-rows.js';
 import { readExtraDates, wireAddExtraDate } from './extra-date-rows.js';
 import { deadlineRow, readDeadline, renumberRows } from './wizard-deadline-row.js';
+import { createSwatchPicker } from './swatch-picker.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const STEP_NAMES = Object.freeze({ name: 'Name', lectures: 'Lectures', deadlines: 'Exams & assignments', review: 'Review' });
@@ -24,9 +25,10 @@ const summaryList = (summary) => h('div', { class: 'wizard-summary-body group' }
 
 /**
  * Calls onSave(course) with a validated v5 course. getCourseNames() returns
- * the names already in use; a new course must not reuse one.
+ * the names already in use; a new course must not reuse one. getNextColor()
+ * returns the color to preselect.
  */
-export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
+export const createCourseWizard = ({ dialog, onSave, getCourseNames, getNextColor }) => {
   const form = dialog.querySelector('form');
   const $ = (selector) => form.querySelector(selector);
   const steps = [...form.querySelectorAll('[data-step]')];
@@ -36,6 +38,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
   const extrasEl = $('#wizard-extras');
   const backBtn = $('#wizard-back-btn');
   const nextBtn = $('#wizard-next-btn');
+  const swatches = createSwatchPicker({ container: $('#wizard-swatches'), dialog });
   let stepIndex = 0;
 
   $('#wizard-days').replaceChildren(...WEEK_ORDER.map((d) => h('label', { class: 'day-toggle' },
@@ -44,6 +47,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
 
   const readDraft = () => ({
     name: form.elements.courseName.value,
+    color: swatches.get(),
     hasLectures: form.elements.hasLectures.checked,
     lectures: {
       weekdays: [...form.querySelectorAll('[name="weekday"]:checked')].map((el) => Number(el.value)),
@@ -110,8 +114,9 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
   };
 
   const open = () => {
-    const draft = blankDraft(today());
+    const draft = blankDraft(today(), getNextColor());
     form.reset();
+    swatches.set(draft.color);
     form.elements.startDate.value = draft.lectures.startDate;
     form.elements.hoursPerLecture.value = draft.lectures.hoursPerLecture;
     form.elements.watched.value = draft.lectures.watched;

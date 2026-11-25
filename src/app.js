@@ -1,4 +1,4 @@
-import { assignColor, colorsById } from './course/color.js';
+import { assignColor, colorsById, nextColor } from './course/color.js';
 import { addLecture, cancelLecture, removeMilestone, saveMilestone, setWatched, stepPrep } from './course/edit.js';
 import { planCourses } from './course/planner.js';
 import { releasedBy } from './course/schedule.js';
@@ -70,7 +70,10 @@ const addCourse = (course) => {
 };
 
 const courseWizard = createCourseWizard({
-  dialog: $('#course-dialog'), onSave: addCourse, getCourseNames: () => state.courses.map((c) => c.name),
+  dialog: $('#course-dialog'),
+  onSave: addCourse,
+  getCourseNames: () => state.courses.map((c) => c.name),
+  getNextColor: () => nextColor(state.courses),
 });
 
 // ---- Course changes (all undoable) ----
@@ -178,7 +181,7 @@ detailDialog.querySelector('[data-detail-close]').addEventListener('click', () =
 $('#course-detail-edit').addEventListener('click', () => {
   const course = findCourse(detailCourseId);
   if (!course) return;
-  courseEditForm.open(course);
+  courseEditForm.open(course, colorOf(course.id));
   markCourseEditClean();
 });
 

@@ -2,6 +2,7 @@
 // when nothing changes); validation of whole forms happens elsewhere.
 
 import { validateCourse } from './course.js';
+import { isColorKey } from './color.js';
 import { lectureDates, pruneRemoved, releasedBy, withLectureAdded, withLectureRemoved } from './schedule.js';
 
 const clamp = (n, low, high) => Math.min(high, Math.max(low, n));
@@ -57,11 +58,12 @@ export const removeMilestone = (course, milestoneId) => ({
 });
 
 /** Name, schedule and watched count from the edit sheet; milestones are kept. */
-export const applyDetails = (course, { name, schedule, watched }) => ({
+export const applyDetails = (course, { name, schedule, watched, color }) => ({
   ...course,
   name: name.trim(),
   schedule: schedule ? pruneRemoved(schedule) : null,
   watched: schedule ? watched : 0,
+  ...(isColorKey(color) ? { color } : {}),
 });
 
 const nameKey = (name) => name.trim().toLocaleLowerCase();

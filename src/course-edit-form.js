@@ -7,6 +7,7 @@ import { applyDetails, detailsErrors } from './course/edit.js';
 import { WEEKDAY_NAMES, lectureDates, releasedBy, validateSchedule } from './course/schedule.js';
 import { breakRow, readBreaks, wireAddBreak } from './break-rows.js';
 import { fillExtraDates, readExtraDates, wireAddExtraDate } from './extra-date-rows.js';
+import { createSwatchPicker } from './swatch-picker.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const DEFAULT_HOURS_PER_LECTURE = 1.5;
@@ -24,6 +25,7 @@ export const createCourseEditForm = ({ dialog, onSave, onDelete, getOtherNames }
   const breaksEl = $('#course-edit-breaks');
   const extrasEl = $('#course-edit-extras');
   const lectureFields = $('#course-edit-lecture-fields');
+  const swatches = createSwatchPicker({ container: $('#course-edit-swatches'), dialog });
   let editing = null;
 
   daysEl.replaceChildren(...WEEK_ORDER.map((d) => h('label', { class: 'day-toggle' },
@@ -46,6 +48,7 @@ export const createCourseEditForm = ({ dialog, onSave, onDelete, getOtherNames }
       name: form.elements.name.value,
       schedule: hasLectures ? readSchedule() : null,
       watched: Number(form.elements.watched.value || 0),
+      color: swatches.get(),
     });
   };
 
@@ -77,11 +80,13 @@ export const createCourseEditForm = ({ dialog, onSave, onDelete, getOtherNames }
     fillExtraDates(extrasEl, schedule?.addedDates ?? [], updatePreview);
   };
 
-  const open = (course) => {
+  /** `color` is the course's resolved color key (its stored or fallback one). */
+  const open = (course, color) => {
     editing = course;
     form.reset();
     errorsEl.textContent = '';
     fill(course);
+    swatches.set(color);
     syncLectureToggle();
     dialog.showModal();
   };

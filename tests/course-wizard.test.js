@@ -47,6 +47,20 @@ test('a blank draft starts today with no deadlines', () => {
   assert.deepEqual(d.deadlines, []);
 });
 
+test('a blank draft starts with the color it is given', () => {
+  assert.equal(blankDraft(TODAY, 'teal').color, 'teal');
+  assert.equal(blankDraft(TODAY).color, null);
+});
+
+test('buildCourse keeps a picked palette color', () => {
+  assert.equal(buildCourse(draft({ color: 'pink' }), counterIds()).color, 'pink');
+});
+
+test('buildCourse leaves out a missing or unknown color', () => {
+  assert.equal('color' in buildCourse(draft({ color: null }), counterIds()), false);
+  assert.equal('color' in buildCourse(draft({ color: 'plaid' }), counterIds()), false);
+});
+
 test('deadlines no longer carry a covers-lectures flag (exams always do)', () => {
   assert.equal('coversLectures' in blankDeadline('exam'), false);
 });

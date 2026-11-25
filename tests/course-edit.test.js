@@ -110,6 +110,17 @@ test('applyDetails without a schedule resets watched', () => {
   assert.equal(next.watched, 0);
 });
 
+test('applyDetails sets a picked palette color', () => {
+  const next = applyDetails(makeCourse({ color: 'violet' }), { name: 'Algorithms', schedule: null, watched: 0, color: 'teal' });
+  assert.equal(next.color, 'teal');
+});
+
+test('applyDetails keeps the color when none or an unknown one is given', () => {
+  const course = makeCourse({ color: 'violet' });
+  assert.equal(applyDetails(course, { name: 'Algorithms', schedule: null, watched: 0 }).color, 'violet');
+  assert.equal(applyDetails(course, { name: 'Algorithms', schedule: null, watched: 0, color: 'plaid' }).color, 'violet');
+});
+
 // ---- Timeline ----
 
 test('timeline lists lectures, milestones and today in date order', () => {
