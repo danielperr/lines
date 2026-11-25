@@ -14,6 +14,7 @@ import { renderHome } from './home-view.js';
 import { createMilestoneForm } from './milestone-form.js';
 import { registerOffline } from './offline.js';
 import { hideWhileScrollingDown } from './scroll.js';
+import { enableSwipeToClose } from './sheet-swipe.js';
 import { createToast } from './toast.js';
 import { createUndo } from './undo.js';
 
@@ -173,10 +174,12 @@ const renderDetail = (plan) => {
 const openCourse = (courseId) => {
   detailCourseId = courseId;
   renderDetail(planCourses(state, localTodayIso()));
+  detailDialog.scrollTop = 0;
   detailDialog.showModal();
 };
 
 detailDialog.addEventListener('close', () => { detailCourseId = null; });
+document.querySelectorAll('dialog.sheet').forEach(enableSwipeToClose);
 detailDialog.querySelector('[data-detail-close]').addEventListener('click', () => detailDialog.close());
 $('#course-detail-edit').addEventListener('click', () => {
   const course = findCourse(detailCourseId);
