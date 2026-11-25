@@ -178,8 +178,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 /* ---- Summary and section heads ---- */
 
 .summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--text-sub); color: var(--muted); }
-.summary .risk { color: var(--behind); font-weight: 600; }
-.summary .btn-plain { margin-left: auto; }
+.summary .summary-hours { margin-left: auto; }
 
 .section-head { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
 .section-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-top: 12px; }
@@ -232,7 +231,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .welcome .btn { justify-self: center; margin-top: 12px; padding: 0 26px; min-height: 52px; }
 
 
-/* ---- Home: Today list and course list (inset grouped lists) ---- */
+/* ---- Home ---- */
 
 .list { list-style: none; margin: 0; padding: 0 var(--gutter); background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
 .list-empty { padding: 14px var(--gutter); font-size: var(--text-sub); }
@@ -240,18 +239,58 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 
 .task { display: flex; align-items: center; gap: 12px; min-height: var(--row-height); padding: 8px 0; }
 .task-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.task-title { font-size: var(--text-body); font-weight: 500; overflow-wrap: anywhere; }
+.task-title { font-size: var(--text-body); font-weight: 600; overflow-wrap: anywhere; }
 .task-detail { font-size: var(--text-foot); color: var(--muted); unicode-bidi: plaintext; }
 .task-done { background: var(--fill); border-radius: var(--radius-pill); }
 
-.course-row { display: grid; gap: 6px; padding: 12px 0; }
-/* The name keeps its natural width; a long status wraps onto its own line instead of squeezing it. */
-.course-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
-.course-name { flex: 1 0 auto; max-width: 100%; font-size: var(--text-body); font-weight: 600; overflow-wrap: break-word; unicode-bidi: plaintext; }
-.course-status { margin-inline-start: auto; font-size: var(--text-foot); font-weight: 600; color: var(--status); text-align: end; }
-.course-row.status-ok .course-status, .course-row.status-done .course-status { color: var(--muted); }
-.course-row.status-done .progress-fill { background: var(--muted); }
-.course-meta { display: grid; gap: 2px; font-size: var(--text-foot); color: var(--muted); font-variant-numeric: tabular-nums; }
+/* Today: one solid card per course. Everything inside reads --course-on. */
+.today-section { display: grid; gap: 10px; }
+.today-card {
+  background: var(--course-solid);
+  color: var(--course-on);
+  border-radius: var(--radius-card);
+  padding: 14px var(--gutter) 6px;
+  box-shadow: var(--shadow-card);
+}
+.today-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.today-card-name { font-family: var(--font-display); font-size: 19px; font-weight: 800; letter-spacing: -0.01em; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.today-card-hours {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--course-tint);
+  color: var(--course-ink);
+  font-size: var(--text-foot);
+  font-weight: 700;
+}
+.today-card-tasks { list-style: none; margin: 4px 0 0; padding: 0; }
+.today-card .task + .task { border-top: 1px solid color-mix(in srgb, var(--course-on) 20%, transparent); }
+.today-card .task-detail { color: inherit; font-weight: 500; }
+/* Chips on the solid card use the tint/ink pair, whose contrast is tested. */
+.today-card .task-done { background: var(--course-tint); color: var(--course-ink); }
+.today-card :focus-visible { outline-color: var(--course-on); }
+
+/* Course list: tinted cards; text uses --course-ink, which passes on the tint. */
+.course-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.course-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px var(--gutter);
+  border-radius: var(--radius-card);
+  background: var(--course-tint);
+  color: var(--course-ink);
+  cursor: pointer;
+}
+.course-top { display: flex; align-items: center; gap: 8px; }
+.course-dot { flex: none; width: 12px; height: 12px; border-radius: 50%; background: var(--course-solid); }
+.course-name { flex: 1; min-width: 0; font-size: var(--text-body); font-weight: 700; color: var(--text); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.course-card .pill { flex: none; background: var(--surface); }
+.course-card.status-done .pill { color: var(--muted); }
+.course-signals { display: grid; gap: 2px; font-size: var(--text-foot); font-weight: 700; }
+.course-signals > span { color: var(--status); }
+.course-card .progress { background: color-mix(in srgb, var(--course-ink) 14%, transparent); }
+.course-card .progress-fill { background: var(--course-solid); }
+.course-meta { display: grid; gap: 2px; font-size: var(--text-foot); font-variant-numeric: tabular-nums; }
 
 /* ---- Course detail sheet ---- */
 
@@ -287,7 +326,6 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .timeline-today { min-height: 28px; }
 .timeline-today .timeline-title, .timeline-today .timeline-date { color: var(--behind); font-weight: 600; font-size: var(--text-foot); text-transform: uppercase; letter-spacing: 0.02em; }
 
-.course-row { cursor: pointer; }
 
 /* ---- Floating add button ---- */
 

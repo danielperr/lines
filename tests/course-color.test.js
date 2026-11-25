@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  COLOR_KEYS, PALETTE, assignColor, courseColor, isColorKey, nextColor,
+  COLOR_KEYS, PALETTE, assignColor, colorsById, courseColor, isColorKey, nextColor,
 } from '../src/course/color.js';
 
 // WCAG 2.x relative luminance and contrast ratio.
@@ -97,4 +97,9 @@ test('assignColor does not change the course it gets', () => {
   const result = assignColor(original, []);
   assert.notEqual(result, original);
   assert.equal(original.color, undefined);
+});
+
+test('colorsById resolves every course color by its stored position', () => {
+  const map = colorsById([course('a'), course('b', 'pink'), course('c')]);
+  assert.deepEqual([...map], [['a', COLOR_KEYS[0]], ['b', 'pink'], ['c', COLOR_KEYS[2]]]);
 });

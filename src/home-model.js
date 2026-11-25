@@ -28,6 +28,25 @@ export const todayRows = (tasks) => tasks.map((task) => ({
   detail: `${task.courseName} · ${formatHours(task.hours)}`,
 }));
 
+/**
+ * One card per course with tasks today, in priority order (the order of each
+ * course's first task). Rows drop the course name: the card shows it. The
+ * total hours only show when the card has more than one task.
+ */
+export const todayCards = (tasks, colors) => {
+  const courseIds = [...new Set(tasks.map((t) => t.courseId))];
+  return courseIds.map((courseId) => {
+    const own = tasks.filter((t) => t.courseId === courseId);
+    return {
+      courseId,
+      courseName: own[0].courseName,
+      color: colors.get(courseId),
+      hoursText: own.length > 1 ? formatHours(own.reduce((sum, t) => sum + t.hours, 0)) : null,
+      rows: todayRows(own).map((row, i) => ({ ...row, detail: formatHours(own[i].hours) })),
+    };
+  });
+};
+
 /** "2 tasks · about 7h", or null when there is nothing to do today. */
 export const todaySummary = (tasks) => {
   if (tasks.length === 0) return null;
@@ -35,16 +54,31 @@ export const todaySummary = (tasks) => {
   return `${amount(tasks.length, 'tasks')} · about ${formatHours(hours)}`;
 };
 
+const PILL_TEXT = Object.freeze({ ok: 'On track', tight: 'Tight', behind: 'Behind', overdue: 'Overdue', done: 'Done' });
+const AT_RISK = new Set(['behind', 'overdue']);
+
+/** The header pill: how many courses need attention, worst first. */
+export const homeStatus = (courses) => {
+  const atRisk = courses.filter((c) => AT_RISK.has(c.status)).length;
+  if (atRisk) return { status: 'behind', text: `${atRisk} behind` };
+  const tight = courses.filter((c) => c.status === 'tight').length;
+  if (tight) return { status: 'tight', text: `${tight} tight` };
+  return courses.every((c) => c.status === 'done') ? { status: 'done', text: 'All done' } : { status: 'ok', text: 'On track' };
+};
+
 const lecturesText = (lectures) => (lectures ? `${lectures.watched} of ${lectures.total} lectures watched` : null);
 
-/** One course-list row from a planned course. */
-export const courseRow = (course) => {
+/** One course-list card from a planned course and its color key. */
+export const courseRow = (course, color) => {
   const lectureLine = lecturesText(course.lectures);
   return {
     id: course.id,
     name: course.name,
+    color,
     status: course.status,
     statusText: course.statusText,
+    pillText: PILL_TEXT[course.status],
+    signals: course.signals.map(({ status, text }) => ({ status, text })),
     progress: course.lectures && course.lectures.total ? course.lectures.watched / course.lectures.total : null,
     lecturesText: lectureLine,
     milestone: course.nextMilestone

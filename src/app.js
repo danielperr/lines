@@ -1,4 +1,4 @@
-import { assignColor } from './course/color.js';
+import { assignColor, colorsById } from './course/color.js';
 import { addLecture, cancelLecture, removeMilestone, saveMilestone, setWatched, stepPrep } from './course/edit.js';
 import { planCourses } from './course/planner.js';
 import { releasedBy } from './course/schedule.js';
@@ -37,7 +37,7 @@ const toast = (message) => {
 
 const render = () => {
   const plan = planCourses(state, localTodayIso());
-  renderHome(root, { plan, weeklyHours: state.weeklyHours, actions });
+  renderHome(root, { plan, colors: colorsById(state.courses), weeklyHours: state.weeklyHours, actions });
   renderDetail(plan);
 };
 

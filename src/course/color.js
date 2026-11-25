@@ -60,3 +60,6 @@ export const nextColor = (courses) => {
 /** A copy of `course` that has a valid color, picked against `others` if needed. */
 export const assignColor = (course, others) =>
   ({ ...course, color: isColorKey(course.color) ? course.color : nextColor(others) });
+
+/** Map of course id → color key, resolved in stored order (not display order). */
+export const colorsById = (courses) => new Map(courses.map((course, index) => [course.id, courseColor(course, index)]));
