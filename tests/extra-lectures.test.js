@@ -1,76 +1,73 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { planSchedule } from '../src/scheduler.js';
-import { parseState, serializeState } from '../src/storage.js';
-import { MAX_EXTRA_DATES, lectureDates, releasedBy, validateTrack } from '../src/tracks.js';
 import { blankDraft, buildCourse, courseSummary, stepErrors } from '../src/course-wizard.js';
+import { planCourses } from '../src/course/planner.js';
+import { MAX_ADDED_DATES, lectureDates, releasedBy, validateSchedule } from '../src/course/schedule.js';
+import { parseState, serializeState } from '../src/course/store.js';
 
 const TODAY = '2026-11-23'; // Monday
 
 /** Mon/Wed, Nov 2 – Dec 6: 10 lectures; 7 out by today. */
-const makeTrack = (overrides = {}) => ({
-  id: 'algo',
-  name: 'Algorithms',
+const makeSchedule = (overrides = {}) => ({
   weekdays: [1, 3],
   startDate: '2026-11-02',
   endDate: '2026-12-06',
   hoursPerLecture: 1.5,
-  watched: 4,
   breaks: [],
-  extraDates: [],
+  addedDates: [],
+  removedDates: [],
   ...overrides,
 });
 
+const lecturesOf = (schedule) => planCourses({
+  weeklyHours: 14, courses: [{ id: 'algo', name: 'Algorithms', schedule, watched: 4, milestones: [] }],
+}, TODAY).courses[0].lectures;
+
 test('an extra lecture on a non-lecture day is added in date order', () => {
-  const track = makeTrack({ extraDates: ['2026-11-20'] }); // Friday
-  const dates = lectureDates(track);
+  const s = makeSchedule({ addedDates: ['2026-11-20'] }); // Friday
+  const dates = lectureDates(s);
   assert.equal(dates.length, 11);
   assert.deepEqual(dates.slice(5, 8), ['2026-11-18', '2026-11-20', '2026-11-23']);
-  assert.equal(releasedBy(track, TODAY), 8);
+  assert.equal(releasedBy(s, TODAY), 8);
 });
 
 test('an extra lecture on a regular lecture day counts as a second lecture', () => {
-  const track = makeTrack({ extraDates: ['2026-11-04'] });
-  assert.equal(lectureDates(track).filter((d) => d === '2026-11-04').length, 2);
+  const s = makeSchedule({ addedDates: ['2026-11-04'] });
+  assert.equal(lectureDates(s).filter((d) => d === '2026-11-04').length, 2);
 });
 
 test('an extra lecture during a break still happens', () => {
-  const track = makeTrack({ breaks: [{ from: '2026-11-09', to: '2026-11-13' }], extraDates: ['2026-11-12'] });
-  assert.deepEqual(lectureDates(track).filter((d) => d.startsWith('2026-11-1')), ['2026-11-12', '2026-11-16', '2026-11-18']);
+  const s = makeSchedule({ breaks: [{ from: '2026-11-09', to: '2026-11-13' }], addedDates: ['2026-11-12'] });
+  assert.deepEqual(lectureDates(s).filter((d) => d.startsWith('2026-11-1')), ['2026-11-12', '2026-11-16', '2026-11-18']);
 });
 
 test('extra lectures add to the backlog', () => {
-  const plain = planSchedule([], 14, TODAY, [makeTrack()]).tracks[0];
-  const extra = planSchedule([], 14, TODAY, [makeTrack({ extraDates: ['2026-11-20'] })]).tracks[0];
+  const plain = lecturesOf(makeSchedule());
+  const extra = lecturesOf(makeSchedule({ addedDates: ['2026-11-20'] }));
   assert.equal(extra.behind, plain.behind + 1);
   assert.equal(extra.total, plain.total + 1);
 });
 
-test('validateTrack rejects malformed extra dates or ones outside the semester', () => {
-  assert.deepEqual(validateTrack(makeTrack({ extraDates: ['2026-11-20'] })), []);
-  assert.match(validateTrack(makeTrack({ extraDates: ['soon'] })).join(' '), /Extra lecture 1/);
-  assert.match(validateTrack(makeTrack({ extraDates: ['2026-11-20', '2027-01-10'] })).join(' '), /Extra lecture 2.*between/);
-  assert.match(validateTrack(makeTrack({ extraDates: 'tuesday' })).join(' '), /Extra lectures are invalid/);
-  const tooMany = Array.from({ length: MAX_EXTRA_DATES + 1 }, () => '2026-11-20');
-  assert.match(validateTrack(makeTrack({ extraDates: tooMany })).join(' '), new RegExp(`${MAX_EXTRA_DATES}`));
+test('validateSchedule rejects malformed extra dates or ones outside the semester', () => {
+  assert.deepEqual(validateSchedule(makeSchedule({ addedDates: ['2026-11-20'] })), []);
+  assert.match(validateSchedule(makeSchedule({ addedDates: ['soon'] })).join(' '), /Extra lecture 1/);
+  assert.match(validateSchedule(makeSchedule({ addedDates: ['2026-11-20', '2027-01-10'] })).join(' '), /Extra lecture 2.*between/);
+  assert.match(validateSchedule(makeSchedule({ addedDates: 'tuesday' })).join(' '), /Extra lectures are invalid/);
+  const tooMany = Array.from({ length: MAX_ADDED_DATES + 1 }, () => '2026-11-20');
+  assert.match(validateSchedule(makeSchedule({ addedDates: tooMany })).join(' '), new RegExp(`${MAX_ADDED_DATES}`));
 });
 
-test('extra lectures alone are enough for a track with no regular days', () => {
-  const track = makeTrack({ weekdays: [], watched: 0, extraDates: ['2026-11-20'] });
-  assert.deepEqual(validateTrack(track), []);
-  assert.deepEqual(lectureDates(track), ['2026-11-20']);
+test('extra lectures alone are enough for a schedule with no regular days', () => {
+  const s = makeSchedule({ weekdays: [], addedDates: ['2026-11-20'] });
+  assert.deepEqual(validateSchedule(s), []);
+  assert.deepEqual(lectureDates(s), ['2026-11-20']);
 });
 
-test('storage keeps extra dates, sorted, and defaults older tracks to none', () => {
-  const track = makeTrack({ extraDates: ['2026-11-27', '2026-11-20'] });
-  const loaded = parseState(serializeState({ weeklyHours: 20, items: [], tracks: [track] }));
+test('storage keeps extra dates sorted', () => {
+  const course = { id: 'algo', name: 'Algorithms', schedule: makeSchedule({ addedDates: ['2026-11-27', '2026-11-20'] }), watched: 0, milestones: [] };
+  const loaded = parseState(serializeState({ weeklyHours: 20, courses: [course] }));
   assert.equal(loaded.ok, true);
-  assert.deepEqual(loaded.state.tracks[0].extraDates, ['2026-11-20', '2026-11-27']);
-
-  const { extraDates, ...older } = makeTrack();
-  const legacy = parseState(JSON.stringify({ weeklyHours: 20, items: [], tracks: [older] }));
-  assert.equal(legacy.ok, true);
-  assert.deepEqual(legacy.state.tracks[0].extraDates, []);
+  assert.deepEqual(loaded.state.courses[0].schedule.addedDates, ['2026-11-20', '2026-11-27']);
 });
 
 const wizardDraft = (lectures) => ({

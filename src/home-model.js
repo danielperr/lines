@@ -1,7 +1,8 @@
 // Text and data for the home screen (Today + course list), built from the
 // planner's output. Pure — dates stay ISO here and are formatted by the view.
 
-const formatHours = (hours) => `${Math.round(hours * 10) / 10}h`;
+import { formatHours } from './dom.js';
+
 const singular = (unit) => unit.replace(/s$/, '');
 const amount = (n, unit) => `${n} ${n === 1 ? singular(unit) : unit}`;
 

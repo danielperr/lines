@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { createUndo } from '../src/undo.js';
 import { createChangeGuard } from '../src/change-guard.js';
 import { scrollDirection } from '../src/scroll.js';
-import { statusText } from '../src/overview.js';
 
 const fakeToast = () => {
   const calls = [];
@@ -91,13 +90,4 @@ test('scroll direction ignores small jitters', () => {
   assert.equal(scrollDirection(100, 140), 'down');
   assert.equal(scrollDirection(140, 100), 'up');
   assert.equal(scrollDirection(30, 0), 'up');
-});
-
-test('overview status text never relies on colour alone', () => {
-  assert.equal(statusText({ status: 'overdue', lecturesBehind: 0 }), 'Overdue');
-  assert.equal(statusText({ status: 'behind', lecturesBehind: 2 }), 'Behind');
-  assert.equal(statusText({ status: 'tight', lecturesBehind: 0 }), 'Tight');
-  assert.equal(statusText({ status: 'tight', lecturesBehind: 3 }), '3 behind');
-  assert.equal(statusText({ status: 'ok', lecturesBehind: 0 }), null);
-  assert.equal(statusText({ status: 'done', lecturesBehind: 0 }), 'Done');
 });

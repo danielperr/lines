@@ -121,7 +121,6 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
   font-weight: 600;
 }
 .btn-filled { background: var(--accent); color: var(--on-accent); }
-.btn-gray { background: var(--fill); color: var(--accent); }
 
 /* Text-only tint button, used for header actions and "Remove" links. */
 .btn-plain {
@@ -151,57 +150,9 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .status-behind, .status-overdue { --status: var(--behind); }
 .status-done { --status: var(--muted); }
 
-.pill {
-  flex-shrink: 0;
-  font-size: var(--text-foot);
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 999px;
-  color: var(--status);
-  background: color-mix(in srgb, var(--status) 14%, transparent);
-}
-.pill-ok { --status: var(--ok); }
-.pill-tight { --status: var(--tight); }
-.pill-behind, .pill-overdue { --status: var(--behind); }
-.pill-done { --status: var(--muted); }
-
 .progress { height: 4px; background: var(--fill-strong); border-radius: 999px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--status, var(--accent)); border-radius: inherit; transition: width 0.25s; }
 .progress.thin { height: 3px; }
-
-/* ---- Cards ---- */
-
-.card, .next-up, .overview {
-  background: var(--surface);
-  border-radius: var(--radius-card);
-}
-
-.card { padding: 14px var(--gutter); display: grid; gap: 8px; cursor: pointer; }
-.card-top { display: flex; gap: 8px; align-items: flex-start; }
-.card-titles { flex: 1; min-width: 0; }
-.card h3 { font-size: var(--text-body); font-weight: 600; overflow-wrap: anywhere; }
-.card-titles .muted { font-size: var(--text-sub); }
-.card-meta { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: var(--text-foot); color: var(--muted); font-variant-numeric: tabular-nums; }
-.slack { margin: 0; font-size: var(--text-sub); color: var(--status); }
-
-.next-up { padding: 16px var(--gutter); display: grid; gap: 6px; }
-.next-up .card-top { align-items: center; justify-content: space-between; }
-.next-up h2 { font-size: 22px; font-weight: 700; letter-spacing: 0.01em; }
-.eyebrow { margin: 0; font-size: var(--text-foot); font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: var(--status); }
-.today { margin: 4px 0 2px; font-size: var(--text-body); font-weight: 600; }
-.next-actions { display: flex; gap: 8px; margin-top: 6px; }
-.next-actions .btn { flex: 1; }
-
-/* Effort rows inside cards */
-.parts { display: grid; border-top: var(--hairline) solid var(--separator); margin-top: 2px; }
-.part { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
-.part + .part { border-top: var(--hairline) solid var(--separator); }
-.part-info { flex: 1; min-width: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; align-items: baseline; }
-.part-label { font-size: var(--text-sub); }
-.part-count { font-size: var(--text-foot); color: var(--muted); justify-self: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.part-info .progress { grid-column: 1 / -1; }
-.track-card .part-label { color: var(--muted); }
-.track-card .part { padding-bottom: 0; }
 
 /* Stepper: two halves of one capsule, like UIStepper. */
 .steps { display: inline-flex; flex-shrink: 0; background: var(--fill); border-radius: var(--radius-control); }
@@ -218,42 +169,10 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .step.plus { color: var(--accent); font-weight: 600; }
 .step:disabled { color: var(--faint); }
 
-.done summary { cursor: pointer; color: var(--muted); font-size: var(--text-sub); padding: 12px 0 8px; }
-.done .card { margin-bottom: 10px; }
-.done .card h3 { color: var(--muted); }
-
 .empty { text-align: center; padding: 48px var(--gutter); display: grid; gap: 8px; }
 .empty h2 { font-size: 22px; font-weight: 700; }
 .welcome .btn { justify-self: center; margin-top: 12px; padding: 0 24px; min-height: 50px; border-radius: var(--radius-card); }
 
-.tracks { display: grid; gap: 10px; }
-
-/* ---- Courses at a glance ---- */
-
-.overview { padding: 6px var(--gutter); }
-/* Rows share one grid so every bar starts and ends at the same x. */
-.overview-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: fit-content(9em) minmax(48px, 1fr) auto; align-items: center; column-gap: 12px; font-size: var(--text-sub); }
-.overview-row {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: subgrid;
-  align-items: center;
-  min-height: var(--row-height);
-  font: inherit;
-  color: inherit;
-  background: none;
-  border: 0;
-  padding: 0;
-  text-align: inherit;
-  cursor: pointer;
-}
-.overview-row + .overview-row { border-top: var(--hairline) solid var(--separator); }
-.overview-row:focus-visible { border-radius: 6px; }
-.overview-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; text-align: left; }
-.overview-label { color: var(--status); font-size: var(--text-foot); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.overview-word { font-weight: 600; }
-.overview-row.status-ok .overview-label, .overview-row.status-done .overview-label { color: var(--muted); }
-.overview-row.status-done .progress-fill { background: var(--muted); }
 
 /* ---- Home: Today list and course list (inset grouped lists) ---- */
 
@@ -467,10 +386,10 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
 .group.padded { padding: 8px; }
 
 /* Wrappers that only arrange fields flatten, so every field becomes its own row. */
-.group :is(.row, .unit-fields, .track-fields) { display: contents; }
+.group .row { display: contents; }
 
 /* Every row gets a hairline on top; the first one is pulled up and clipped by the group. */
-.group :is(label:not(.day-toggle), .break-head, .part-editor-top, .group-note, .group-action) {
+.group :is(label:not(.day-toggle), .break-head, .group-action) {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -486,7 +405,6 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
 }
 .group label:not(.day-toggle):focus-within { background: var(--highlight); }
 
-.group-note { white-space: normal !important; font-size: var(--text-foot) !important; color: var(--muted) !important; padding-block: 10px !important; }
 .group-action { background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; color: var(--accent) !important; text-align: start; cursor: pointer; }
 
 /* Values sit on the right, like a Settings row. */
@@ -605,17 +523,6 @@ input[type="date"]::-webkit-date-and-time-value { text-align: end; margin: 0; }
 .extra-row:focus-within { background: var(--highlight); }
 .extra-row > label:focus-within { background: none; }
 
-.part-editor-top { padding-right: 4px !important; }
-.part-editor-top select {
-  flex: 1;
-  min-height: var(--row-height);
-  padding: 0 22px 0 0;
-  background-color: transparent;
-  font-weight: 600;
-  border-radius: 0;
-}
-.icon-btn { flex-shrink: 0; width: 44px; height: 44px; border: 0; background: none; color: var(--muted); font-size: var(--text-sub); border-radius: 50%; }
-
 /* ---- Day picker: seven equal toggles on one line ---- */
 
 .day-picker { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
@@ -658,15 +565,8 @@ input[type="date"]::-webkit-date-and-time-value { text-align: end; margin: 0; }
 /* ---- Text direction ---- */
 
 /* User-entered text may be Hebrew/Arabic: let each line pick its own direction. */
-.card h3, .next-up h2, .card-titles p, .next-up > .muted, .part-label,
 .wizard-summary-title, .wizard-deadline input[name="title"] { unicode-bidi: plaintext; }
-.card h3, .next-up h2, .card-titles p, .next-up > .muted, .part-label { text-align: start; }
-
-/* ---- Jump highlight ---- */
-
-.flash { animation: flash 1.2s ease-out; }
-@keyframes flash { 0%, 30% { box-shadow: 0 0 0 3px var(--accent); } 100% { box-shadow: 0 0 0 3px transparent; } }
-[data-course] { scroll-margin-top: 90px; }
+.course-name, .task-title, .detail-row-title, .timeline-title { text-align: start; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }

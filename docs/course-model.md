@@ -72,4 +72,4 @@ hours), deadlines with no course → "Unsorted". The old key
 2. ✅ Planner: per-course status (both signals), prep window, Today tasks (`planner.js`)
 3. ✅ Today + course list screens; wire store into app, add modules to `APP_SHELL`; wizard outputs a course (unique names, optional prep)
 4. ✅ Course detail timeline, milestone sheet, cancel/add lecture, course edit sheet (rename, schedule, delete); Undo toast moves into the open sheet so it stays tappable
-5. Remove old deadline/track modules, bump cache, full test + browser pass
+5. ✅ Removed old deadline/track modules, item dialog, dead styles and their tests (break/extra-lecture tests ported to the course API); toast moved to `src/toast.js`. The offline cache name is content-hashed by the build, so no manual bump is needed.

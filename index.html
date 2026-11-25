@@ -25,38 +25,6 @@
 
   <button id="add-btn" class="fab" type="button" aria-label="Add course">+</button>
 
-  <dialog id="item-dialog" class="sheet">
-    <form id="item-form" method="dialog" novalidate data-form-type="other">
-      <div class="sheet-top">
-        <header class="sheet-bar">
-          <button class="bar-btn" type="button" data-close>Cancel</button>
-          <h2 id="item-dialog-title" class="sheet-title" tabindex="-1" autofocus>New deadline</h2>
-          <button class="bar-btn bar-done" type="submit">Save</button>
-        </header>
-        <p id="item-errors" class="errors" role="alert"></p>
-      </div>
-
-      <div class="group">
-        <label>Title
-          <input name="title" dir="auto" required maxlength="80" placeholder="Midterm, HW3" data-form-type="other">
-        </label>
-        <label>Course
-          <input name="course" dir="auto" maxlength="60" placeholder="Linear Algebra" data-form-type="other">
-        </label>
-        <label>Due date
-          <input name="due" type="date" required data-form-type="other">
-        </label>
-      </div>
-
-      <h3 class="group-header">Effort</h3>
-      <div id="parts-list" class="stack"></div>
-      <button id="add-part-btn" class="add-row" type="button">Add effort part</button>
-      <p class="group-footer">Add a part for each kind of work, like lectures to watch plus days of study.</p>
-
-      <button id="delete-btn" class="destructive-row" type="button" hidden>Delete deadline</button>
-    </form>
-  </dialog>
-
   <dialog id="course-detail" class="sheet">
     <div class="sheet-content">
       <div class="sheet-top">

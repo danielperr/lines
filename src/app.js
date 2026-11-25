@@ -13,6 +13,7 @@ import { renderHome } from './home-view.js';
 import { createMilestoneForm } from './milestone-form.js';
 import { registerOffline } from './offline.js';
 import { hideWhileScrollingDown } from './scroll.js';
+import { createToast } from './toast.js';
 import { createUndo } from './undo.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -21,45 +22,9 @@ const settingsDialog = $('#settings-dialog');
 const settingsForm = $('#settings-form');
 
 let state = null;
-let toastTimer = null;
-
-const TOAST_MS = 3500;
 const UNDO_MS = 6000;
 
-const toastEl = $('#toast');
-const toastText = $('#toast-text');
-const toastAction = $('#toast-action');
-let toastActionHandler = null;
-
-// An open modal sheet makes everything outside it inert, so the toast lives
-// inside the topmost open sheet (and goes back to <body> when it closes) to
-// keep Undo tappable.
-const placeToast = () => {
-  const host = [...document.querySelectorAll('dialog[open]')].at(-1) ?? document.body;
-  if (toastEl.parentElement !== host) host.append(toastEl);
-};
-
-document.addEventListener('close', (e) => {
-  if (e.target.contains(toastEl)) document.body.append(toastEl);
-}, true);
-
-const hideToast = () => {
-  clearTimeout(toastTimer);
-  toastEl.hidden = true;
-  toastActionHandler = null;
-};
-
-const showToast = (message, onAction = null) => {
-  clearTimeout(toastTimer);
-  toastText.textContent = message;
-  toastAction.hidden = !onAction;
-  toastActionHandler = onAction;
-  placeToast();
-  toastEl.hidden = false;
-  if (!onAction) toastTimer = setTimeout(hideToast, TOAST_MS);
-};
-
-toastAction.addEventListener('click', () => toastActionHandler?.());
+const { show: showToast, hide: hideToast } = createToast($('#toast'));
 
 const undo = createUndo({ show: showToast, hide: hideToast, timeoutMs: UNDO_MS });
 
