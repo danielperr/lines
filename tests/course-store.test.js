@@ -121,3 +121,22 @@ test('saveState reports storage failures', () => {
   const broken = { setItem: () => { throw new Error('quota'); } };
   assert.match(saveState({ weeklyHours: 20, courses: [] }, broken).error, /quota/);
 });
+
+test('keeps a valid course color through a round trip', () => {
+  const result = parseState(v5({ courses: [{ ...course, color: 'amber' }] }));
+  assert.ok(result.ok);
+  assert.equal(result.state.courses[0].color, 'amber');
+  assert.equal(parseState(serializeState(result.state)).state.courses[0].color, 'amber');
+});
+
+test('a course without a color loads with no color key', () => {
+  const result = parseState(v5());
+  assert.ok(result.ok);
+  assert.ok(!('color' in result.state.courses[0]));
+});
+
+test('an unknown course color is dropped instead of failing the load', () => {
+  const result = parseState(v5({ courses: [{ ...course, color: 'plaid' }] }));
+  assert.ok(result.ok);
+  assert.ok(!('color' in result.state.courses[0]));
+});

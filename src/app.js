@@ -1,3 +1,4 @@
+import { assignColor } from './course/color.js';
 import { addLecture, cancelLecture, removeMilestone, saveMilestone, setWatched, stepPrep } from './course/edit.js';
 import { planCourses } from './course/planner.js';
 import { releasedBy } from './course/schedule.js';
@@ -64,7 +65,8 @@ const withCourse = (course) => ({ ...state, courses: state.courses.map((c) => (c
 // ---- Add-course wizard ----
 
 const addCourse = (course) => {
-  commitUndoable({ ...state, courses: [...state.courses, course] }, `Added "${course.name}"`);
+  const colored = assignColor(course, state.courses);
+  commitUndoable({ ...state, courses: [...state.courses, colored] }, `Added "${colored.name}"`);
 };
 
 const courseWizard = createCourseWizard({

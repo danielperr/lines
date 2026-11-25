@@ -1,6 +1,7 @@
 // A course is the root entity: a name, an optional lecture schedule, how many
 // lectures have been watched, and its milestones.
 
+import { isColorKey } from './color.js';
 import { validateMilestone } from './milestone.js';
 import { lectureDates, validateSchedule } from './schedule.js';
 
@@ -36,10 +37,14 @@ const milestonesErrors = (milestones) => {
   return new Set(ids).size === ids.length ? [] : ['Two milestones share the same id.'];
 };
 
+// Color is optional; when present it must be a palette key.
+const colorErrors = (course) =>
+  (!('color' in course) || isColorKey(course.color) ? [] : ['Color is not one of the palette colors.']);
+
 /** Returns human-readable problems; empty means valid. */
 export const validateCourse = (course) => {
   const scheduleErrors = course.schedule === null ? [] : validateSchedule(course.schedule);
   const errors = [...nameErrors(course.name), ...scheduleErrors];
   if (scheduleErrors.length === 0) errors.push(...watchedErrors(course));
-  return [...errors, ...milestonesErrors(course.milestones)];
+  return [...errors, ...colorErrors(course), ...milestonesErrors(course.milestones)];
 };

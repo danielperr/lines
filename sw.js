@@ -26,6 +26,7 @@ const APP_SHELL = [
   './src/course/edit.js',
   './src/course/milestone-draft.js',
   './src/course/timeline.js',
+  './src/course/color.js',
   './src/course/course.js',
   './src/course/lectures.js',
   './src/course/migrate-v4.js',

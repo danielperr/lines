@@ -74,3 +74,13 @@ test('validateCourse names schedule problems', () => {
   const errors = validateCourse(makeCourse({ schedule: { ...schedule, hoursPerLecture: 0 } }));
   assert.match(errors[0], /hours per lecture/i);
 });
+
+test('validateCourse accepts a course with or without a palette color', () => {
+  assert.deepEqual(validateCourse(makeCourse()), []);
+  assert.deepEqual(validateCourse(makeCourse({ color: 'teal' })), []);
+});
+
+test('validateCourse rejects a color outside the palette', () => {
+  assert.equal(validateCourse(makeCourse({ color: '#ff0000' })).length, 1);
+  assert.equal(validateCourse(makeCourse({ color: null })).length, 1);
+});
