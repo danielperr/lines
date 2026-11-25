@@ -16,14 +16,14 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>Deadlines</h1>
+    <h1>Today</h1>
   </header>
 
   <main id="app" aria-live="polite"></main>
 
   <div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button id="toast-action" class="toast-action" type="button" hidden>Undo</button></div>
 
-  <button id="add-btn" class="fab" type="button" aria-label="Add deadline">+</button>
+  <button id="add-btn" class="fab" type="button" aria-label="Add course">+</button>
 
   <dialog id="item-dialog" class="sheet">
     <form id="item-form" method="dialog" novalidate data-form-type="other">
@@ -202,7 +202,7 @@
 
       <section data-step="deadlines" class="wizard-step" hidden>
         <h2 tabindex="-1">Exams and assignments</h2>
-        <p class="wizard-lede">Add what you know now. You can always add more later with +.</p>
+        <p class="wizard-lede">Add what you know now. Prep is optional: fill it in only if you need extra study before the date.</p>
         <div id="wizard-deadlines" class="wizard-deadlines stack"></div>
         <p id="wizard-deadlines-empty" class="group-footer">Nothing yet.</p>
         <div class="wizard-add-row">
@@ -234,7 +234,7 @@
           <input name="weeklyHours" type="number" inputmode="decimal" min="1" max="168" step="0.5" required data-form-type="other">
         </label>
       </div>
-      <p class="group-footer">Used to work out how much time you have before each deadline.</p>
+      <p class="group-footer">Used to work out how much time you have before each exam and assignment.</p>
 
       <h3 class="group-header">Backup</h3>
       <div class="group">

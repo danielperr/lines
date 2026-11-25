@@ -28,14 +28,15 @@ const nextPrepOf = (prep) => {
 const summarizeCourse = ({ course, lectures, prep }, slackAt, perDay, todayIso) => {
   const lectureSummary = summarizeLectures(course, lectures, slackAt, perDay, todayIso);
   const signals = courseSignals(lectureSummary, prep);
+  const nextMilestone = nextMilestoneOf(course, todayIso);
   return {
     id: course.id,
     name: course.name,
-    ...courseStatus(lectureSummary, prep, signals),
+    ...courseStatus(lectureSummary, prep, signals, nextMilestone !== null),
     signals,
     lectures: lectureSummary,
     prep,
-    nextMilestone: nextMilestoneOf(course, todayIso),
+    nextMilestone,
     nextPrep: nextPrepOf(prep),
   };
 };

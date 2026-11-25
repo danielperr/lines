@@ -81,6 +81,11 @@ test('assignment-only deadlines become assignments', () => {
   assert.equal(migrate({ items: [hw] }).courses[0].milestones[0].kind, 'assignment');
 });
 
+test('deadlines with only custom effort become assignments, so they do not gate lectures', () => {
+  const essay = item({ title: 'Essay', parts: [unitPart({ type: 'custom', unit: 'hours', hoursPerUnit: 1 })] });
+  assert.equal(migrate({ items: [essay] }).courses[0].milestones[0].kind, 'assignment');
+});
+
 test('several prep parts merge into hours', () => {
   const parts = [unitPart(), unitPart({ id: 'p2', type: 'custom', unit: 'days', totalUnits: 1, doneUnits: 0, hoursPerUnit: 4 })];
   const { prep } = migrate({ items: [item({ parts })] }).courses[0].milestones[0];

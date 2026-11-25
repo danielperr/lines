@@ -28,12 +28,16 @@ export const courseSignals = (lectures, prep) => [
   ...prep.filter((p) => p.inWindow).map(prepSignal),
 ];
 
-const isFinished = (lectures, prep) => (!lectures || lectures.status === 'done') && prep.length === 0;
+const isFinished = (lectures, prep, hasUpcoming) =>
+  (!lectures || lectures.status === 'done') && prep.length === 0 && !hasUpcoming;
 
-/** Overall tone (for colour and sorting) and the words that explain it. */
-export const courseStatus = (lectures, prep, signals) => {
+/**
+ * Overall tone (for colour and sorting) and the words that explain it.
+ * `hasUpcoming`: the course still has a milestone ahead, so it is not done.
+ */
+export const courseStatus = (lectures, prep, signals, hasUpcoming = false) => {
   if (signals.length === 0) {
-    const finished = isFinished(lectures, prep);
+    const finished = isFinished(lectures, prep, hasUpcoming);
     return { status: finished ? 'done' : 'ok', statusText: finished ? 'All done' : 'On track' };
   }
   return {

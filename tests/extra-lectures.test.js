@@ -79,13 +79,13 @@ const wizardDraft = (lectures) => ({
   lectures: { ...blankDraft(TODAY).lectures, ...lectures },
 });
 
-test('the wizard starts with no extra lectures and carries them into the track', () => {
+test('the wizard starts with no extra lectures and carries them into the course schedule', () => {
   assert.deepEqual(blankDraft(TODAY).lectures.extraDates, []);
   const draft = wizardDraft({ weekdays: [1, 3], startDate: '2026-11-02', endDate: '2026-12-06', extraDates: ['2026-11-20'] });
   assert.deepEqual(stepErrors('lectures', draft, TODAY), []);
   let n = 0;
-  const { track } = buildCourse(draft, () => `id-${++n}`);
-  assert.deepEqual(track.extraDates, ['2026-11-20']);
+  const { schedule } = buildCourse(draft, () => `id-${++n}`);
+  assert.deepEqual(schedule.addedDates, ['2026-11-20']);
 });
 
 test('the wizard summary mentions extra lectures', () => {

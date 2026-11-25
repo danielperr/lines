@@ -90,6 +90,18 @@ test('a fully watched course with nothing left is done', () => {
   assert.equal(course.statusText, 'All done');
 });
 
+test('a course with an upcoming milestone is on track, not done, even with nothing to prepare', () => {
+  const lab = exam({ kind: 'assignment', title: 'Lab', date: '2026-12-04' });
+  const course = only([makeCourse({ schedule: null, watched: 0, milestones: [lab] })]);
+  assert.equal(course.status, 'ok');
+  assert.equal(course.statusText, 'On track');
+});
+
+test('a course whose milestones are all past and lectures all watched is done', () => {
+  const old = exam({ date: '2026-11-01' });
+  assert.equal(only([makeCourse({ watched: 10, milestones: [old] })]).status, 'done');
+});
+
 // ---- Prep window ----
 
 test('prep before its window is not counted, only announced', () => {

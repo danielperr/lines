@@ -42,11 +42,8 @@ const prepFrom = (unitParts) => {
   };
 };
 
-const kindFor = (linked, unitParts) => {
-  if (linked) return 'exam';
-  const types = unitParts.map((p) => p.type);
-  return types.includes('assignment') && !types.includes('exam') ? 'assignment' : 'exam';
-};
+/** Exams make earlier lectures due, so only deadlines that clearly are exams become one. */
+const kindFor = (linked, unitParts) => (linked || unitParts.some((p) => p.type === 'exam') ? 'exam' : 'assignment');
 
 const milestoneFrom = (item, linked, unitParts) => ({
   id: item.id,

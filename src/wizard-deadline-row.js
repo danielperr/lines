@@ -5,8 +5,8 @@ import { h } from './dom.js';
 import { deadlineLabels, kindLabel } from './course-wizard.js';
 
 const AMOUNT = Object.freeze({
-  exam: { label: 'Chapters to study', placeholder: 'e.g. 6' },
-  assignment: { label: 'Days of work', placeholder: 'e.g. 3' },
+  exam: { label: 'Chapters of prep', placeholder: 'Optional' },
+  assignment: { label: 'Days of work', placeholder: 'Optional' },
 });
 const TITLE_PLACEHOLDER = Object.freeze({ exam: 'e.g. Midterm', assignment: 'e.g. HW1' });
 
@@ -19,12 +19,7 @@ export const renumberRows = (container) => {
   rows.forEach((row, i) => { row.querySelector('.wizard-deadline-title').textContent = labels[i]; });
 };
 
-/** Shows or hides the "includes lectures" option depending on step 2. */
-export const setLecturesAvailable = (container, available) => {
-  container.querySelectorAll('.covers-row').forEach((el) => { el.hidden = !available; });
-};
-
-export const deadlineRow = (deadline, { onRemove, lecturesAvailable }) => {
+export const deadlineRow = (deadline, { onRemove }) => {
   const { kind } = deadline;
   const row = h('fieldset', { class: 'wizard-deadline group', dataset: { kind } },
     h('div', { class: 'break-head' },
@@ -38,10 +33,7 @@ export const deadlineRow = (deadline, { onRemove, lecturesAvailable }) => {
         h('input', {
           name: 'amount', type: 'number', inputmode: 'numeric', min: 1, step: 1,
           value: deadline.amount, placeholder: AMOUNT[kind].placeholder,
-        }))),
-    h('label', { class: 'switch-row covers-row', hidden: !lecturesAvailable },
-      h('input', { name: 'coversLectures', type: 'checkbox', checked: deadline.coversLectures }),
-      h('span', {}, 'Watch this course\'s lectures before it')));
+        }))));
   return row;
 };
 
@@ -50,5 +42,4 @@ export const readDeadline = (row) => ({
   title: field(row, 'title').value,
   due: field(row, 'due').value,
   amount: field(row, 'amount').value.trim(),
-  coversLectures: field(row, 'coversLectures').checked,
 });

@@ -1,8 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { WIZARD_STEPS, blankDraft, deadlineLabels, blankDeadline, buildCourse, courseSummary, stepErrors } from '../src/course-wizard.js';
-import { validateItem } from '../src/scheduler.js';
-import { validateTrack } from '../src/tracks.js';
+import { validateCourse } from '../src/course/course.js';
 
 // Monday. Mon/Wed lectures Nov 2 – Dec 6 = 10 lectures, 7 released by today.
 const TODAY = '2026-11-23';
@@ -48,14 +47,20 @@ test('a blank draft starts today with no deadlines', () => {
   assert.deepEqual(d.deadlines, []);
 });
 
-test('a blank exam covers lectures by default, an assignment does not', () => {
-  assert.equal(blankDeadline('exam').coversLectures, true);
-  assert.equal(blankDeadline('assignment').coversLectures, false);
+test('deadlines no longer carry a covers-lectures flag (exams always do)', () => {
+  assert.equal('coversLectures' in blankDeadline('exam'), false);
 });
 
 test('name step requires a non-blank name', () => {
   assert.deepEqual(stepErrors('name', draft({ name: '   ' }), TODAY), ['Give the course a name.']);
   assert.deepEqual(stepErrors('name', draft(), TODAY), []);
+});
+
+test('name step refuses a name already in use, ignoring case and spaces', () => {
+  assert.deepEqual(stepErrors('name', draft({ name: ' algorithms ' }), TODAY, ['Algorithms']),
+    ['You already have "Algorithms". Pick another name.']);
+  assert.deepEqual(stepErrors('review', draft(), TODAY, ['Algorithms']).length, 1);
+  assert.deepEqual(stepErrors('name', draft(), TODAY, ['Biology']), []);
 });
 
 test('name step rejects names longer than 60 characters', () => {
@@ -86,14 +91,14 @@ test('deadlineLabels numbers each kind separately', () => {
   assert.deepEqual(deadlineLabels(['exam', 'assignment', 'exam']), ['Exam 1', 'Assignment 1', 'Exam 2']);
 });
 
-test('an exam that covers lectures needs no study amount', () => {
-  const d = draft({ deadlines: [exam({ amount: '' })] });
+test('prep is optional for every deadline', () => {
+  const d = draft({ hasLectures: false, deadlines: [exam({ amount: '' })] });
   assert.deepEqual(stepErrors('deadlines', d, TODAY), []);
 });
 
-test('a deadline with no lectures needs an amount of work', () => {
-  const d = draft({ hasLectures: false, deadlines: [exam({ amount: '' })] });
-  assert.deepEqual(stepErrors('deadlines', d, TODAY), ['Exam 1: Enter how many chapters there are to study.']);
+test('a prep amount, when given, must be more than 0', () => {
+  const d = draft({ deadlines: [exam({ amount: '0' })] });
+  assert.deepEqual(stepErrors('deadlines', d, TODAY), ['Exam 1: Prep amount must be more than 0, or leave it empty.']);
 });
 
 test('a course with neither lectures nor deadlines is refused', () => {
@@ -106,46 +111,56 @@ test('review step reports every earlier problem', () => {
   assert.deepEqual(stepErrors('review', d, TODAY), ['Give the course a name.', 'Pick at least one lecture day.']);
 });
 
-test('buildCourse creates a valid track and items that share the course name', () => {
-  const { track, items } = buildCourse(draft({ name: '  Algorithms ' }), counterIds());
-  assert.deepEqual(validateTrack(track), []);
-  assert.equal(track.name, 'Algorithms');
-  assert.equal(items.length, 1);
-  assert.equal(items[0].course, 'Algorithms');
-  assert.deepEqual(validateItem(items[0], [track.id]), []);
+test('buildCourse creates one valid course with a trimmed name', () => {
+  const course = buildCourse(draft({ name: '  Algorithms ' }), counterIds());
+  assert.deepEqual(validateCourse(course), []);
+  assert.equal(course.name, 'Algorithms');
+  assert.equal(course.watched, 4);
+  assert.deepEqual(course.schedule, {
+    weekdays: [MON, WED],
+    startDate: '2026-11-02',
+    endDate: '2026-12-06',
+    hoursPerLecture: 1.5,
+    breaks: [],
+    addedDates: [],
+    removedDates: [],
+  });
 });
 
-test('an exam covering lectures links the track and adds study chapters', () => {
-  const { track, items } = buildCourse(draft(), counterIds());
-  const [unit, link] = items[0].parts;
-  assert.deepEqual(
-    { type: unit.type, unit: unit.unit, totalUnits: unit.totalUnits, doneUnits: unit.doneUnits, hoursPerUnit: unit.hoursPerUnit },
-    { type: 'exam', unit: 'chapters', totalUnits: 6, doneUnits: 0, hoursPerUnit: 2 },
-  );
-  assert.deepEqual({ type: link.type, trackId: link.trackId }, { type: 'track', trackId: track.id });
+test('extra lectures become added dates, sorted', () => {
+  const course = buildCourse(draft({ lectures: lectures({ extraDates: ['2026-11-27', '2026-11-20'] }) }), counterIds());
+  assert.deepEqual(course.schedule.addedDates, ['2026-11-20', '2026-11-27']);
 });
 
-test('an exam with only lectures gets just the track link', () => {
-  const { items } = buildCourse(draft({ deadlines: [exam({ amount: '' })] }), counterIds());
-  assert.deepEqual(items[0].parts.map((p) => p.type), ['track']);
+test('an exam with an amount gets chapters of prep', () => {
+  const [m] = buildCourse(draft(), counterIds()).milestones;
+  assert.deepEqual({ ...m, id: 'x' }, {
+    id: 'x', kind: 'exam', title: 'Final', date: '2026-12-20', prep: { unit: 'chapters', total: 6, done: 0, hoursPerUnit: 2 },
+  });
 });
 
-test('an assignment counts days of work and skips lectures', () => {
+test('a deadline without an amount has no prep', () => {
+  assert.equal(buildCourse(draft({ deadlines: [exam({ amount: '' })] }), counterIds()).milestones[0].prep, null);
+});
+
+test('an assignment counts days of prep', () => {
   const d = draft({ deadlines: [{ ...blankDeadline('assignment'), title: 'HW1', due: '2026-12-01', amount: 2 }] });
-  const { items } = buildCourse(d, counterIds());
-  assert.deepEqual(items[0].parts.map((p) => [p.type, p.unit, p.totalUnits]), [['assignment', 'days', 2]]);
+  const [m] = buildCourse(d, counterIds()).milestones;
+  assert.equal(m.kind, 'assignment');
+  assert.deepEqual(m.prep, { unit: 'days', total: 2, done: 0, hoursPerUnit: 4 });
 });
 
-test('without lectures there is no track and nothing links to one', () => {
-  const { track, items } = buildCourse(draft({ hasLectures: false }), counterIds());
-  assert.equal(track, null);
-  assert.deepEqual(items[0].parts.map((p) => p.type), ['exam']);
+test('without lectures the course has no schedule', () => {
+  const course = buildCourse(draft({ hasLectures: false }), counterIds());
+  assert.equal(course.schedule, null);
+  assert.equal(course.watched, 0);
+  assert.deepEqual(validateCourse(course), []);
 });
 
 test('every created id is unique', () => {
   const d = draft({ deadlines: [exam(), exam({ title: 'Midterm', due: '2026-11-30' })] });
-  const { track, items } = buildCourse(d, counterIds());
-  const ids = [track.id, ...items.flatMap((i) => [i.id, ...i.parts.map((p) => p.id)])];
+  const course = buildCourse(d, counterIds());
+  const ids = [course.id, ...course.milestones.map((m) => m.id)];
   assert.equal(new Set(ids).size, ids.length);
 });
 
@@ -161,8 +176,8 @@ test('summary describes the lectures and each deadline', () => {
   assert.deepEqual(courseSummary(d, TODAY), {
     lectures: 'Mon, Wed · 10 lectures (7 out, 4 watched)',
     deadlines: [
-      { title: 'Final', due: '2026-12-20', detail: '6 chapters + lectures' },
-      { title: 'HW1', due: '2026-12-01', detail: '2 days' },
+      { title: 'Final', due: '2026-12-20', detail: 'lectures + 6 chapters of prep' },
+      { title: 'HW1', due: '2026-12-01', detail: '2 days of prep' },
     ],
   });
 });

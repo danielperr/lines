@@ -61,8 +61,8 @@ lectures with the same due date form one task ("Lectures 5–6").
 ## Migration from v1–v4
 
 `src/course/migrate-v4.js` groups old tracks and deadlines by course name:
-tracks → course schedules, deadlines → milestones (linked-to-track → exam;
-assignment-only effort → assignment), unit parts → prep (mixed units merge into
+tracks → course schedules, deadlines → milestones (linked to a track or
+has exam prep → exam; anything else → assignment), unit parts → prep (mixed units merge into
 hours), deadlines with no course → "Unsorted". The old key
 `study-deadlines:v1` is never overwritten.
 
@@ -70,6 +70,6 @@ hours), deadlines with no course → "Unsorted". The old key
 
 1. ✅ Model, schedule exceptions, storage v5, migration (`src/course/`)
 2. ✅ Planner: per-course status (both signals), prep window, Today tasks (`planner.js`)
-3. Today + course list screens; wire store into app, add modules to `APP_SHELL`
+3. ✅ Today + course list screens; wire store into app, add modules to `APP_SHELL`; wizard outputs a course (unique names, optional prep)
 4. Course detail timeline, milestone sheet, cancel/add lecture
 5. Remove old deadline/track modules, bump cache, full test + browser pass
