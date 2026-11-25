@@ -33,12 +33,22 @@ No semester grouping and no archiving for now.
   due by the next **exam** after it (assignments do not gate lectures), or by
   semester end.
 - **Prep (only when relevant):** a milestone with prep gets a computed
-  "start by" date from weekly hours and competing work. Before it, prep is
-  shown as info only ("Midterm prep starts Dec 5"). From then on it counts.
+  "start by" date (today + spare days, from weekly hours and all competing
+  work across courses). Its window opens `PREP_LEAD_DAYS` (3) days before
+  that, or as soon as the user logs any prep, or once the milestone has
+  passed. Before the window, prep is shown as info only (`nextPrep`:
+  "Midterm prep starts Dec 10"); inside it, prep counts toward status.
 - **Course status shows both signals once both are relevant** — not just the
   worse one. Lectures must be watched before exam prep, so when the user is
   behind on lectures inside a prep window the status says both are needed,
   e.g. "3 lectures behind · Midterm prep behind 2h".
+
+## Today
+
+`planCourses(state, today).today` fills about one day of study hours
+(weekly hours ÷ 7) from released, unwatched lectures and in-window prep,
+earliest due first; on a tie lectures come before prep. Consecutive
+lectures with the same due date form one task ("Lectures 5–6").
 
 ## Screens
 
@@ -59,7 +69,7 @@ hours), deadlines with no course → "Unsorted". The old key
 ## Build phases
 
 1. ✅ Model, schedule exceptions, storage v5, migration (`src/course/`)
-2. Planner: per-course status (both signals), prep window, Today tasks
+2. ✅ Planner: per-course status (both signals), prep window, Today tasks (`planner.js`)
 3. Today + course list screens; wire store into app, add modules to `APP_SHELL`
 4. Course detail timeline, milestone sheet, cancel/add lecture
 5. Remove old deadline/track modules, bump cache, full test + browser pass
