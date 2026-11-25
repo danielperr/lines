@@ -1,41 +1,53 @@
 /* =========================================================================
-   Deadlines: minimal iOS-native style.
-   Colors follow Apple's system palette (grouped backgrounds, label colors,
-   separators). Status text colors use the accessible variants, so they stay
-   readable as small text.
+   Deadlines: style C, color-coded cards.
+   Neutral "ink" chrome on warm paper so course colors carry the meaning.
+   Each course paints with --course-* variables set by [data-color]; the
+   values mirror src/course/color.js (kept in sync by a test). Status text
+   colors stay readable as small text on their pill tint.
    ========================================================================= */
 
 :root {
   /* Surfaces */
-  --bg: #f2f2f7;              /* systemGroupedBackground */
-  --surface: #ffffff;         /* secondarySystemGroupedBackground */
-  --sheet-bg: #f2f2f7;
+  --bg: #f6f5f2;
+  --surface: #ffffff;
+  --sheet-bg: #f6f5f2;
   --sheet-group: #ffffff;
-  --fill: rgb(120 120 128 / 12%);        /* tertiarySystemFill */
-  --fill-strong: rgb(120 120 128 / 20%); /* secondarySystemFill */
-  --highlight: rgb(0 0 0 / 5%);
+  --fill: rgb(29 27 32 / 7%);
+  --fill-strong: rgb(29 27 32 / 12%);
+  --highlight: rgb(29 27 32 / 4%);
+  --shadow-card: 0 1px 2px rgb(29 27 32 / 5%), 0 6px 18px rgb(29 27 32 / 5%);
+  --shadow-float: 0 6px 20px rgb(29 27 32 / 22%);
 
   /* Text */
-  --text: #000000;
-  --muted: rgb(60 60 67 / 60%);    /* secondaryLabel */
-  --faint: rgb(60 60 67 / 30%);    /* tertiaryLabel */
-  --separator: rgb(60 60 67 / 29%);
+  --text: #1d1b20;
+  --muted: rgb(29 27 32 / 62%);
+  --faint: rgb(29 27 32 / 32%);
+  --separator: rgb(29 27 32 / 12%);
 
-  /* Tint and status */
-  --accent: #007aff;
+  /* Ink accent and status */
+  --accent: #1d1b20;
   --on-accent: #ffffff;
-  --ok: #248a3d;
-  --tight: #c93400;
-  --behind: #d70015;
-  --switch-on: #34c759;
+  --toast-action: #c9bbff;
+  --ok: #17652c;
+  --tight: #9c2a00;
+  --behind: #a80d26;
+  --switch-on: #2fa84f;
+
+  /* Course color outside any [data-color]: falls back to ink */
+  --course-solid: var(--accent);
+  --course-on: var(--on-accent);
+  --course-tint: var(--fill);
+  --course-ink: var(--text);
 
   /* Shape and type */
-  --radius-card: 12px;
-  --radius-group: 10px;
-  --radius-control: 8px;
+  --radius-card: 20px;
+  --radius-group: 16px;
+  --radius-control: 12px;
+  --radius-pill: 999px;
   --row-height: 44px;
   --gutter: 16px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --font-display: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --text-body: 17px;
   --text-sub: 15px;
   --text-foot: 13px;
@@ -46,23 +58,50 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #000000;
-    --surface: #1c1c1e;
-    --sheet-bg: #1c1c1e;
-    --sheet-group: #2c2c2e;
-    --fill: rgb(118 118 128 / 24%);
-    --fill-strong: rgb(118 118 128 / 32%);
-    --highlight: rgb(255 255 255 / 8%);
-    --text: #ffffff;
-    --muted: rgb(235 235 245 / 60%);
-    --faint: rgb(235 235 245 / 30%);
-    --separator: rgb(84 84 88 / 60%);
-    --accent: #0a84ff;
-    --ok: #30d158;
-    --tight: #ff9f0a;
-    --behind: #ff453a;
-    --switch-on: #30d158;
+    --bg: #0f0f11;
+    --surface: #1c1b1f;
+    --sheet-bg: #161518;
+    --sheet-group: #232227;
+    --fill: rgb(255 255 255 / 9%);
+    --fill-strong: rgb(255 255 255 / 15%);
+    --highlight: rgb(255 255 255 / 6%);
+    --shadow-card: none;
+    --shadow-float: 0 6px 20px rgb(0 0 0 / 50%);
+    --text: #f3f2f5;
+    --muted: rgb(243 242 245 / 62%);
+    --faint: rgb(243 242 245 / 32%);
+    --separator: rgb(255 255 255 / 10%);
+    --accent: #f3f2f5;
+    --on-accent: #1d1b20;
+    --toast-action: #5b3fd6;
+    --ok: #4cd471;
+    --tight: #ffab40;
+    --behind: #ff6b6b;
+    --switch-on: #34c759;
   }
+}
+
+/* ---- Course colors (values from src/course/color.js; tested) ---- */
+
+[data-color="violet"] { --course-solid: #6c4ce0; --course-on: #ffffff; --course-tint: #ece7fd; --course-ink: #3b2a8c; }
+[data-color="amber"] { --course-solid: #ffb547; --course-on: #3d2600; --course-tint: #fff1d9; --course-ink: #6b4300; }
+[data-color="teal"] { --course-solid: #2ec4a6; --course-on: #00352b; --course-tint: #daf5ef; --course-ink: #0b5c4c; }
+[data-color="coral"] { --course-solid: #c9402b; --course-on: #ffffff; --course-tint: #fde6e1; --course-ink: #8a2414; }
+[data-color="blue"] { --course-solid: #2563d9; --course-on: #ffffff; --course-tint: #e1ebfc; --course-ink: #173f8f; }
+[data-color="pink"] { --course-solid: #c2317a; --course-on: #ffffff; --course-tint: #fbe3ef; --course-ink: #80174d; }
+[data-color="green"] { --course-solid: #7bc96f; --course-on: #13380d; --course-tint: #e6f5e2; --course-ink: #2c5f22; }
+[data-color="slate"] { --course-solid: #4a5568; --course-on: #ffffff; --course-tint: #e8ebf0; --course-ink: #2d3646; }
+
+/* course colors: dark */
+@media (prefers-color-scheme: dark) {
+  [data-color="violet"] { --course-solid: #7457e4; --course-on: #ffffff; --course-tint: #2a2347; --course-ink: #cfc3ff; }
+  [data-color="amber"] { --course-solid: #f5a524; --course-on: #2e1c00; --course-tint: #3a2c12; --course-ink: #ffd38a; }
+  [data-color="teal"] { --course-solid: #26b597; --course-on: #00241d; --course-tint: #143630; --course-ink: #8ae8d4; }
+  [data-color="coral"] { --course-solid: #e0614b; --course-on: #1f0500; --course-tint: #3d1d17; --course-ink: #ffb4a6; }
+  [data-color="blue"] { --course-solid: #4a84f0; --course-on: #00102e; --course-tint: #18284a; --course-ink: #a9c6ff; }
+  [data-color="pink"] { --course-solid: #e0559a; --course-on: #1f0010; --course-tint: #3d1a2c; --course-ink: #ffb0d6; }
+  [data-color="green"] { --course-solid: #6bba5f; --course-on: #0c2607; --course-tint: #1c3418; --course-ink: #b2e8a8; }
+  [data-color="slate"] { --course-solid: #8a96aa; --course-on: #10151d; --course-tint: #262c36; --course-ink: #c9d2e0; }
 }
 
 /* ---- Base ---- */
@@ -106,7 +145,7 @@ button:disabled { cursor: default; }
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
 }
-.app-header h1 { max-width: 640px; margin: 0 auto; font-size: 34px; font-weight: 700; letter-spacing: 0.01em; }
+.app-header h1 { max-width: 640px; margin: 0 auto; font-family: var(--font-display); font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
 
 main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid; gap: 12px; }
 
@@ -114,22 +153,25 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 
 .btn {
   border: 0;
-  border-radius: var(--radius-group);
-  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  padding: 0 22px;
   min-height: var(--row-height);
   font-size: var(--text-body);
-  font-weight: 600;
+  font-weight: 700;
 }
 .btn-filled { background: var(--accent); color: var(--on-accent); }
 
-/* Text-only tint button, used for header actions and "Remove" links. */
+/* Secondary action chip: header actions, "Add", "Remove". */
 .btn-plain {
-  background: none;
+  flex-shrink: 0;
+  background: var(--fill);
   border: 0;
-  color: var(--accent);
+  border-radius: var(--radius-pill);
+  color: var(--text);
   font-size: var(--text-sub);
-  padding: 0 4px;
-  min-height: var(--row-height);
+  font-weight: 600;
+  padding: 0 14px;
+  min-height: 34px;
 }
 .btn-plain.destructive { color: var(--behind); }
 
@@ -140,7 +182,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .summary .btn-plain { margin-left: auto; }
 
 .section-head { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
-.section-title { font-size: 22px; font-weight: 700; letter-spacing: 0.01em; margin-top: 12px; }
+.section-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-top: 12px; }
 .section-head .section-title { margin-top: 0; }
 
 /* ---- Status ---- */
@@ -150,33 +192,49 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .status-behind, .status-overdue { --status: var(--behind); }
 .status-done { --status: var(--muted); }
 
-.progress { height: 4px; background: var(--fill-strong); border-radius: 999px; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--status, var(--accent)); border-radius: inherit; transition: width 0.25s; }
-.progress.thin { height: 3px; }
+.progress { height: 6px; background: var(--fill-strong); border-radius: var(--radius-pill); overflow: hidden; }
+.progress-fill { height: 100%; background: var(--status, var(--course-solid)); border-radius: inherit; transition: width 0.25s; }
+.progress.thin { height: 4px; }
 
-/* Stepper: two halves of one capsule, like UIStepper. */
-.steps { display: inline-flex; flex-shrink: 0; background: var(--fill); border-radius: var(--radius-control); }
+/* Status pill: "On track", "2 behind". */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--status, var(--text)) 14%, transparent);
+  color: var(--status, var(--text));
+  font-size: var(--text-foot);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Stepper: two halves of one pill. */
+.steps { display: inline-flex; flex-shrink: 0; background: var(--fill); border-radius: var(--radius-pill); }
 .step {
   min-width: 48px;
   min-height: 36px;
   border: 0;
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--text);
   font-size: var(--text-body);
-  font-weight: 500;
+  font-weight: 600;
 }
-.step + .step { border-left: var(--hairline) solid var(--separator); }
-.step.plus { color: var(--accent); font-weight: 600; }
+.step + .step { border-left: var(--hairline) solid var(--separator); border-radius: 0 var(--radius-pill) var(--radius-pill) 0; }
+.steps > .step:first-child:not(:last-child) { border-radius: var(--radius-pill) 0 0 var(--radius-pill); }
+.step.plus { color: var(--course-ink); font-weight: 800; }
 .step:disabled { color: var(--faint); }
 
 .empty { text-align: center; padding: 48px var(--gutter); display: grid; gap: 8px; }
-.empty h2 { font-size: 22px; font-weight: 700; }
-.welcome .btn { justify-self: center; margin-top: 12px; padding: 0 24px; min-height: 50px; border-radius: var(--radius-card); }
+.empty h2 { font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: -0.01em; }
+.welcome .btn { justify-self: center; margin-top: 12px; padding: 0 26px; min-height: 52px; }
 
 
 /* ---- Home: Today list and course list (inset grouped lists) ---- */
 
-.list { list-style: none; margin: 0; padding: 0 var(--gutter); background: var(--surface); border-radius: var(--radius-card); }
+.list { list-style: none; margin: 0; padding: 0 var(--gutter); background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
 .list-empty { padding: 14px var(--gutter); font-size: var(--text-sub); }
 .list > li + li { border-top: var(--hairline) solid var(--separator); }
 
@@ -184,7 +242,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .task-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .task-title { font-size: var(--text-body); font-weight: 500; overflow-wrap: anywhere; }
 .task-detail { font-size: var(--text-foot); color: var(--muted); unicode-bidi: plaintext; }
-.task-done { background: var(--fill); border-radius: var(--radius-control); }
+.task-done { background: var(--fill); border-radius: var(--radius-pill); }
 
 .course-row { display: grid; gap: 6px; padding: 12px 0; }
 /* The name keeps its natural width; a long status wraps onto its own line instead of squeezing it. */
@@ -203,7 +261,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .detail-status-text { margin: 0; font-size: var(--text-body); font-weight: 600; color: var(--status); }
 .detail-status.status-ok .detail-status-text, .detail-status.status-done .detail-status-text { color: var(--text); }
 .detail-status .muted { margin: 2px 0 0; font-size: var(--text-sub); }
-.detail-body .list { background: var(--sheet-group); border-radius: var(--radius-group); }
+.detail-body .list { background: var(--sheet-group); border-radius: var(--radius-group); box-shadow: none; }
 
 .detail-row { display: flex; align-items: center; gap: 12px; min-height: var(--row-height); padding: 8px 0; }
 .detail-row-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
@@ -211,7 +269,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .detail-row-note { font-size: var(--text-foot); color: var(--muted); }
 .milestone-row { cursor: pointer; }
 .add-lecture .detail-row-title { flex: 1 0 auto; }
-.add-lecture input[type="date"] { flex: 0 1 10.5em; width: 10.5em; border: 0; background: var(--fill); color: var(--text); border-radius: var(--radius-control); padding: 6px 8px; font: inherit; font-size: var(--text-sub); }
+.add-lecture input[type="date"] { flex: 0 1 10.5em; width: 10.5em; border: 0; background: var(--fill); color: var(--text); border-radius: var(--radius-pill); padding: 6px 10px; font: inherit; font-size: var(--text-sub); }
 .detail-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .timeline-earlier summary { cursor: pointer; color: var(--muted); font-size: var(--text-sub); padding: 6px var(--gutter); }
@@ -225,7 +283,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .timeline-watched .timeline-title::after { content: " ✓"; color: var(--ok); }
 .timeline-out .timeline-title { font-weight: 600; }
 .timeline-cancelled .timeline-title { color: var(--muted); text-decoration: line-through; }
-.timeline-milestone .timeline-title { font-weight: 600; color: var(--accent); }
+.timeline-milestone .timeline-title { font-weight: 700; color: var(--course-ink); }
 .timeline-today { min-height: 28px; }
 .timeline-today .timeline-title, .timeline-today .timeline-date { color: var(--behind); font-weight: 600; font-size: var(--text-foot); text-transform: uppercase; letter-spacing: 0.02em; }
 
@@ -237,16 +295,16 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
   position: fixed;
   right: 20px;
   bottom: calc(20px + env(safe-area-inset-bottom));
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-card);
   border: 0;
   background: var(--accent);
   color: var(--on-accent);
-  font-size: 30px;
-  font-weight: 300;
+  font-size: 32px;
+  font-weight: 400;
   line-height: 1;
-  box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
+  box-shadow: var(--shadow-float);
   transition: transform 200ms ease-out, opacity 200ms ease-out;
 }
 .fab.fab-hidden { transform: translateY(calc(100% + 40px)); opacity: 0; pointer-events: none; }
@@ -259,13 +317,12 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
   right: 92px;
   bottom: calc(26px + env(safe-area-inset-bottom));
   margin: 0;
-  background: rgb(28 28 30 / 88%);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  color: #ffffff;
-  padding: 4px 8px 4px 16px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-float);
+  padding: 4px 8px 4px 18px;
   min-height: var(--row-height);
-  border-radius: 14px;
+  border-radius: var(--radius-group);
   font-size: var(--text-sub);
   display: flex;
   align-items: center;
@@ -273,7 +330,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
   z-index: 3;
 }
 #toast-text { flex: 1; min-width: 0; overflow-wrap: anywhere; padding: 8px 0; }
-.toast-action { flex-shrink: 0; background: none; border: 0; color: #0a84ff; font-weight: 600; padding: 0 8px; min-height: var(--row-height); }
+.toast-action { flex-shrink: 0; background: none; border: 0; color: var(--toast-action); font-weight: 700; padding: 0 8px; min-height: var(--row-height); }
 
 /* =========================================================================
    Sheets (dialogs): a bottom sheet on phones, a centered card on wider screens.
@@ -286,13 +343,13 @@ dialog {
   max-height: 94dvh; /* excludes Safari's toolbar when it shows */
   margin: auto auto 0;
   border: 0;
-  border-radius: 12px 12px 0 0;
+  border-radius: 24px 24px 0 0;
   padding: 0;
   background: var(--sheet-bg);
   color: var(--text);
   overscroll-behavior: contain;
 }
-@media (min-width: 600px) { dialog { margin: auto; border-radius: 14px; } }
+@media (min-width: 600px) { dialog { margin: auto; border-radius: var(--radius-card); } }
 dialog::backdrop { background: rgb(0 0 0 / 40%); }
 
 dialog form {
@@ -332,12 +389,20 @@ dialog form {
 .bar-btn {
   background: none;
   border: 0;
-  color: var(--accent);
+  color: var(--text);
   font-size: var(--text-body);
   padding: 0 8px;
   min-height: var(--row-height);
 }
-.bar-done { font-weight: 600; }
+/* The sheet's main action: a filled pill in the course color (ink by default). */
+.bar-done {
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--course-solid);
+  color: var(--course-on);
+  font-weight: 700;
+}
 .bar-start { display: flex; }
 /* In the wizard, Back takes Cancel's place after the first step. */
 #wizard-back-btn:not([hidden]) + [data-close] { display: none; }
@@ -347,13 +412,11 @@ dialog form {
 
 /* Section header and footer text around a group */
 .group-header {
-  font-size: var(--text-foot);
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-  padding: 0 var(--gutter);
-  margin: 14px 0 -2px;
+  font-size: var(--text-sub);
+  font-weight: 700;
+  color: var(--text);
+  padding: 0 4px;
+  margin: 16px 0 0;
 }
 .group-footer, .preview, .hint {
   margin: -2px 0 6px;
@@ -361,7 +424,7 @@ dialog form {
   font-size: var(--text-foot);
   color: var(--muted);
 }
-.preview, .hint { color: var(--accent); }
+.preview, .hint { color: var(--course-ink); font-weight: 600; }
 .preview:empty { display: none; }
 
 fieldset.plain { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; min-width: 0; }
@@ -405,7 +468,7 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
 }
 .group label:not(.day-toggle):focus-within { background: var(--highlight); }
 
-.group-action { background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; color: var(--accent) !important; text-align: start; cursor: pointer; }
+.group-action { background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; color: var(--course-ink) !important; font-weight: 600 !important; text-align: start; cursor: pointer; }
 
 /* Values sit on the right, like a Settings row. */
 .group label > :is(input, select):not([type="checkbox"]) {
@@ -430,8 +493,8 @@ fieldset.plain > legend { float: left; width: 100%; } /* lets the legend sit in 
 .group label > input[type="date"] {
   flex: 0 1 auto;
   min-height: 34px;
-  padding: 0 10px;
-  border-radius: var(--radius-control);
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
   background: var(--fill);
 }
 .group label > input[type="date"]:focus { box-shadow: 0 0 0 2px var(--accent); }
@@ -508,7 +571,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: end; margin: 0; }
   font-size: var(--text-body);
   padding: 0 var(--gutter);
 }
-.add-row { color: var(--accent); text-align: start; }
+.add-row { color: var(--course-ink); font-weight: 600; text-align: start; }
 .add-row::before { content: "+"; display: inline-block; width: 1.1em; font-weight: 500; }
 .destructive-row { color: var(--behind); margin-top: 20px; }
 
@@ -532,25 +595,25 @@ input[type="date"]::-webkit-date-and-time-value { text-align: end; margin: 0; }
   display: block;
   padding: 9px 0;
   text-align: center;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-pill);
   background: var(--fill);
   color: var(--text);
   font-size: var(--text-sub);
   cursor: pointer;
 }
-.day-toggle input:checked + span { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.day-toggle input:checked + span { background: var(--course-solid); color: var(--course-on); font-weight: 700; }
 .day-toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* ---- Add-course wizard ---- */
 
 .wizard-head { display: grid; gap: 6px; padding: 2px 8px 10px; }
 .wizard-dots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.wizard-dots span { height: 3px; border-radius: 2px; background: var(--fill-strong); transition: background 200ms ease-out; }
-.wizard-dots span.on { background: var(--accent); }
+.wizard-dots span { height: 4px; border-radius: var(--radius-pill); background: var(--fill-strong); transition: background 200ms ease-out; }
+.wizard-dots span.on { background: var(--course-solid); }
 .wizard-progress { margin: 0; font-size: var(--text-foot); color: var(--muted); text-align: center; }
 
 .wizard-step, .wizard-fields { display: grid; gap: 8px; }
-.wizard-step h2 { font-size: 28px; font-weight: 700; letter-spacing: 0.01em; padding: 0 4px; margin-top: 4px; }
+.wizard-step h2 { font-family: var(--font-display); font-size: 28px; font-weight: 800; letter-spacing: -0.02em; padding: 0 4px; margin-top: 4px; }
 .wizard-step h2:focus { outline: none; }
 .wizard-lede { margin: 0 0 8px; padding: 0 4px; color: var(--muted); font-size: var(--text-sub); }
 
@@ -558,7 +621,7 @@ input[type="date"]::-webkit-date-and-time-value { text-align: end; margin: 0; }
 .wizard-add-row .add-row { flex: 1; }
 
 .wizard-summary-body { padding: 4px var(--gutter) 12px; gap: 4px; }
-.wizard-summary-body h3 { margin: 10px 0 0; color: var(--muted); font-size: var(--text-foot); font-weight: 400; text-transform: uppercase; letter-spacing: 0.02em; }
+.wizard-summary-body h3 { margin: 10px 0 0; color: var(--muted); font-size: var(--text-foot); font-weight: 700; }
 .wizard-summary-body p { margin: 0; }
 .wizard-summary-list { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
 
