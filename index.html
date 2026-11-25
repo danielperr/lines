@@ -57,67 +57,144 @@
     </form>
   </dialog>
 
-  <dialog id="track-dialog" class="sheet">
-    <form id="track-form" method="dialog" novalidate data-form-type="other">
+  <dialog id="course-detail" class="sheet">
+    <div class="sheet-content">
+      <div class="sheet-top">
+        <header class="sheet-bar">
+          <button class="bar-btn" type="button" data-detail-close>Done</button>
+          <h2 id="course-detail-title" class="sheet-title" tabindex="-1" autofocus>Course</h2>
+          <button id="course-detail-edit" class="bar-btn" type="button">Edit</button>
+        </header>
+      </div>
+      <div id="course-detail-body" class="detail-body"></div>
+    </div>
+  </dialog>
+
+  <dialog id="milestone-dialog" class="sheet">
+    <form id="milestone-form" method="dialog" novalidate data-form-type="other">
       <div class="sheet-top">
         <header class="sheet-bar">
           <button class="bar-btn" type="button" data-close>Cancel</button>
-          <h2 id="track-dialog-title" class="sheet-title" tabindex="-1" autofocus>New lecture track</h2>
+          <h2 id="milestone-dialog-title" class="sheet-title" tabindex="-1" autofocus>New exam</h2>
           <button class="bar-btn bar-done" type="submit">Save</button>
         </header>
-        <p id="track-errors" class="errors" role="alert"></p>
+        <p id="milestone-errors" class="errors" role="alert"></p>
       </div>
 
       <div class="group">
-        <label>Course
+        <label>Kind
+          <select name="kind" data-form-type="other">
+            <option value="exam">Exam</option>
+            <option value="assignment">Assignment</option>
+          </select>
+        </label>
+        <label>Title
+          <input name="title" dir="auto" required maxlength="80" placeholder="Midterm, HW3" data-form-type="other">
+        </label>
+        <label>Date
+          <input name="date" type="date" required data-form-type="other">
+        </label>
+      </div>
+      <p class="group-footer">Lectures before an exam are due by the exam. Assignments don't affect lectures.</p>
+
+      <div class="group">
+        <label class="switch-row">
+          <input name="hasPrep" type="checkbox" data-form-type="other">
+          <span>Extra prep before this</span>
+        </label>
+      </div>
+      <div id="milestone-prep-fields" class="group">
+        <div class="row">
+          <label>Amount
+            <input name="total" type="number" inputmode="decimal" min="0.5" step="0.5" placeholder="e.g. 5" data-form-type="other">
+          </label>
+          <label>Unit
+            <input name="unit" dir="auto" maxlength="20" placeholder="chapters" data-form-type="other">
+          </label>
+        </div>
+        <div class="row">
+          <label>Done so far
+            <input name="done" type="number" inputmode="decimal" min="0" step="0.5" data-form-type="other">
+          </label>
+          <label>Hours each
+            <input name="hoursPerUnit" type="number" inputmode="decimal" min="0.25" step="0.25" data-form-type="other">
+          </label>
+        </div>
+      </div>
+      <p class="group-footer">Prep only counts toward "on track" from a few days before you'd need to start it.</p>
+
+      <button id="milestone-delete-btn" class="destructive-row" type="button" hidden>Delete</button>
+    </form>
+  </dialog>
+
+  <dialog id="course-edit-dialog" class="sheet">
+    <form id="course-edit-form" method="dialog" novalidate data-form-type="other">
+      <div class="sheet-top">
+        <header class="sheet-bar">
+          <button class="bar-btn" type="button" data-close>Cancel</button>
+          <h2 class="sheet-title" tabindex="-1" autofocus>Edit course</h2>
+          <button class="bar-btn bar-done" type="submit">Save</button>
+        </header>
+        <p id="course-edit-errors" class="errors" role="alert"></p>
+      </div>
+
+      <div class="group">
+        <label>Name
           <input name="name" dir="auto" required maxlength="60" placeholder="Algorithms" data-form-type="other">
         </label>
       </div>
 
-      <fieldset class="plain">
-        <legend class="group-header">Lecture days</legend>
-        <div class="group padded">
-          <div id="track-days" class="day-picker"></div>
-        </div>
-      </fieldset>
-
       <div class="group">
-        <div class="row">
-          <label>First lecture
-            <input name="startDate" type="date" required data-form-type="other">
-          </label>
-          <label>Semester ends
-            <input name="endDate" type="date" required data-form-type="other">
-          </label>
-        </div>
-        <div class="row">
-          <label>Hours per lecture
-            <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" required data-form-type="other">
-          </label>
-          <label>Watched so far
-            <input name="watched" type="number" inputmode="numeric" min="0" step="1" value="0" data-form-type="other">
-          </label>
-        </div>
+        <label class="switch-row">
+          <input name="hasLectures" type="checkbox" data-form-type="other">
+          <span>This course has weekly lectures</span>
+        </label>
       </div>
-      <p id="track-preview" class="preview"></p>
 
-      <fieldset class="plain">
-        <legend class="group-header">Breaks</legend>
-        <div id="track-breaks" class="breaks-list stack"></div>
-        <button id="add-break-btn" class="add-row" type="button">Add break</button>
-        <p class="group-footer">Holidays or semester breaks with no lectures. Leave "To" empty for a single day.</p>
-      </fieldset>
+      <div id="course-edit-lecture-fields" class="stack">
+        <fieldset class="plain">
+          <legend class="group-header">Lecture days</legend>
+          <div class="group padded">
+            <div id="course-edit-days" class="day-picker"></div>
+          </div>
+        </fieldset>
 
-      <fieldset class="plain">
-        <legend class="group-header">Extra lectures</legend>
-        <div id="track-extras" class="extras-list stack"></div>
-        <button id="add-extra-btn" class="add-row" type="button">Add extra lecture</button>
-        <p class="group-footer">Make-up or bonus lectures on a specific date, on top of the weekly ones.</p>
-      </fieldset>
+        <div class="group">
+          <div class="row">
+            <label>First lecture
+              <input name="startDate" type="date" data-form-type="other">
+            </label>
+            <label>Semester ends
+              <input name="endDate" type="date" data-form-type="other">
+            </label>
+          </div>
+          <div class="row">
+            <label>Hours per lecture
+              <input name="hoursPerLecture" type="number" inputmode="decimal" min="0.25" step="0.25" data-form-type="other">
+            </label>
+            <label>Watched so far
+              <input name="watched" type="number" inputmode="numeric" min="0" step="1" value="0" data-form-type="other">
+            </label>
+          </div>
+        </div>
+        <p id="course-edit-preview" class="preview"></p>
 
-      <p class="group-footer">Lectures are due by the next exam or assignment that links this track, or by semester end.</p>
+        <fieldset class="plain">
+          <legend class="group-header">Breaks</legend>
+          <div id="course-edit-breaks" class="breaks-list stack"></div>
+          <button id="course-edit-add-break" class="add-row" type="button">Add break</button>
+          <p class="group-footer">Holidays or semester breaks with no lectures. Leave "To" empty for a single day.</p>
+        </fieldset>
 
-      <button id="track-delete-btn" class="destructive-row" type="button" hidden>Delete track</button>
+        <fieldset class="plain">
+          <legend class="group-header">Extra lectures</legend>
+          <div id="course-edit-extras" class="extras-list stack"></div>
+          <button id="course-edit-add-extra" class="add-row" type="button">Add extra lecture</button>
+          <p class="group-footer">Make-up lectures on a specific date. Cancel single lectures from the course timeline.</p>
+        </fieldset>
+      </div>
+
+      <button id="course-delete-btn" class="destructive-row" type="button">Delete course</button>
     </form>
   </dialog>
 

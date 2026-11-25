@@ -1,12 +1,16 @@
+import { addLecture, cancelLecture, removeMilestone, saveMilestone, setWatched, stepPrep } from './course/edit.js';
 import { planCourses } from './course/planner.js';
 import { releasedBy } from './course/schedule.js';
 import {
   DEFAULT_STATE, LEGACY_STORAGE_KEY, STORAGE_KEY, loadState, parseState, saveState, serializeState,
 } from './course/store.js';
-import { h, localTodayIso } from './dom.js';
+import { h, formatDate, localTodayIso } from './dom.js';
 import { guardDialog } from './change-guard.js';
+import { renderCourseDetail } from './course-detail-view.js';
+import { createCourseEditForm } from './course-edit-form.js';
 import { createCourseWizard } from './course-wizard-form.js';
 import { renderHome } from './home-view.js';
+import { createMilestoneForm } from './milestone-form.js';
 import { registerOffline } from './offline.js';
 import { hideWhileScrollingDown } from './scroll.js';
 import { createUndo } from './undo.js';
@@ -27,6 +31,18 @@ const toastText = $('#toast-text');
 const toastAction = $('#toast-action');
 let toastActionHandler = null;
 
+// An open modal sheet makes everything outside it inert, so the toast lives
+// inside the topmost open sheet (and goes back to <body> when it closes) to
+// keep Undo tappable.
+const placeToast = () => {
+  const host = [...document.querySelectorAll('dialog[open]')].at(-1) ?? document.body;
+  if (toastEl.parentElement !== host) host.append(toastEl);
+};
+
+document.addEventListener('close', (e) => {
+  if (e.target.contains(toastEl)) document.body.append(toastEl);
+}, true);
+
 const hideToast = () => {
   clearTimeout(toastTimer);
   toastEl.hidden = true;
@@ -38,6 +54,7 @@ const showToast = (message, onAction = null) => {
   toastText.textContent = message;
   toastAction.hidden = !onAction;
   toastActionHandler = onAction;
+  placeToast();
   toastEl.hidden = false;
   if (!onAction) toastTimer = setTimeout(hideToast, TOAST_MS);
 };
@@ -55,6 +72,7 @@ const toast = (message) => {
 const render = () => {
   const plan = planCourses(state, localTodayIso());
   renderHome(root, { plan, weeklyHours: state.weeklyHours, actions });
+  renderDetail(plan);
 };
 
 const commit = (nextState) => {
@@ -88,35 +106,104 @@ const courseWizard = createCourseWizard({
   dialog: $('#course-dialog'), onSave: addCourse, getCourseNames: () => state.courses.map((c) => c.name),
 });
 
-// ---- Progress ----
+// ---- Course changes (all undoable) ----
 
-/** +1 / −1 watched lecture, with Undo. Oldest first; can't watch one that isn't out yet. */
-const watch = (courseId, delta) => {
+/** Applies fn to one course; does nothing when fn returns the same course. */
+const changeCourse = (courseId, fn, message) => {
   const course = findCourse(courseId);
-  if (!course?.schedule) return;
-  const released = releasedBy(course.schedule, localTodayIso());
-  const watched = Math.min(released, Math.max(0, course.watched + delta));
-  if (watched === course.watched) return;
-  commitUndoable(withCourse({ ...course, watched }), `${course.name}: ${watched}/${released} watched`);
+  if (!course) return;
+  const next = fn(course);
+  if (next === course) return;
+  commitUndoable(withCourse(next), message(next, course));
 };
 
-/** +1 / −1 unit of prep on a milestone, with Undo. */
-const stepPrep = (courseId, milestoneId, delta) => {
+const watch = (courseId, delta) => changeCourse(courseId, (c) => setWatched(c, c.watched + delta, localTodayIso()),
+  (c) => `${c.name}: ${c.watched}/${releasedBy(c.schedule, localTodayIso())} watched`);
+
+const prepStep = (courseId, milestoneId, delta) => changeCourse(courseId, (c) => stepPrep(c, milestoneId, delta), (c) => {
+  const m = c.milestones.find((x) => x.id === milestoneId);
+  return `${m.title}: ${m.prep.done}/${m.prep.total} ${m.prep.unit}`;
+});
+
+const lectureChange = (courseId, iso, op) => changeCourse(courseId, (c) => (op === 'cancel' ? cancelLecture(c, iso) : addLecture(c, iso)),
+  () => `${op === 'cancel' ? 'Cancelled' : 'Added'} lecture on ${formatDate(iso)}`);
+
+const saveMilestoneTo = (courseId, milestone) => changeCourse(courseId, (c) => saveMilestone(c, milestone),
+  () => `Saved "${milestone.title}"`);
+
+const deleteMilestone = (courseId, milestoneId) => changeCourse(courseId, (c) => removeMilestone(c, milestoneId),
+  (c, before) => `Deleted "${before.milestones.find((m) => m.id === milestoneId)?.title ?? 'milestone'}"`);
+
+const saveCourse = (course) => changeCourse(course.id, () => course, () => `Saved "${course.name}"`);
+
+const deleteCourse = (courseId) => {
   const course = findCourse(courseId);
-  const milestone = course?.milestones.find((m) => m.id === milestoneId);
-  if (!milestone?.prep) return;
-  const { prep } = milestone;
-  const done = Math.min(prep.total, Math.max(0, prep.done + delta));
-  if (done === prep.done) return;
-  const next = { ...milestone, prep: { ...prep, done } };
-  const milestones = course.milestones.map((m) => (m.id === milestoneId ? next : m));
-  commitUndoable(withCourse({ ...course, milestones }), `${milestone.title}: ${done}/${prep.total} ${prep.unit}`);
+  if (!course) return;
+  detailDialog.close();
+  commitUndoable({ ...state, courses: state.courses.filter((c) => c.id !== courseId) }, `Deleted "${course.name}"`);
 };
 
 /** +1 from a Today row. */
 const doTask = (action) => (action.kind === 'lectures'
   ? watch(action.courseId, 1)
-  : stepPrep(action.courseId, action.milestoneId, 1));
+  : prepStep(action.courseId, action.milestoneId, 1));
+
+// ---- Course detail, milestone and edit sheets ----
+
+const detailDialog = $('#course-detail');
+let detailCourseId = null;
+
+const milestoneForm = createMilestoneForm({ dialog: $('#milestone-dialog'), onSave: saveMilestoneTo, onDelete: deleteMilestone });
+const markMilestoneClean = guardDialog($('#milestone-dialog'));
+
+const courseEditForm = createCourseEditForm({
+  dialog: $('#course-edit-dialog'),
+  onSave: saveCourse,
+  onDelete: deleteCourse,
+  getOtherNames: (id) => state.courses.filter((c) => c.id !== id).map((c) => c.name),
+});
+const markCourseEditClean = guardDialog($('#course-edit-dialog'));
+
+const detailActions = (courseId) => ({
+  watch: (delta) => watch(courseId, delta),
+  stepPrep: (milestoneId, delta) => prepStep(courseId, milestoneId, delta),
+  editMilestone: (id) => { milestoneForm.open(courseId, findCourse(courseId)?.milestones.find((m) => m.id === id)); markMilestoneClean(); },
+  addMilestone: (kind) => { milestoneForm.open(courseId, null, kind); markMilestoneClean(); },
+  cancelLecture: (iso) => lectureChange(courseId, iso, 'cancel'),
+  addLecture: (iso) => lectureChange(courseId, iso, 'add'),
+});
+
+/** Redraws the open course sheet from the latest plan; closes it if the course is gone. */
+const renderDetail = (plan) => {
+  if (!detailCourseId) return;
+  const course = findCourse(detailCourseId);
+  if (!course) {
+    detailDialog.close();
+    return;
+  }
+  $('#course-detail-title').textContent = course.name;
+  renderCourseDetail($('#course-detail-body'), {
+    course,
+    planned: plan.courses.find((c) => c.id === course.id),
+    todayIso: localTodayIso(),
+    actions: detailActions(course.id),
+  });
+};
+
+const openCourse = (courseId) => {
+  detailCourseId = courseId;
+  renderDetail(planCourses(state, localTodayIso()));
+  detailDialog.showModal();
+};
+
+detailDialog.addEventListener('close', () => { detailCourseId = null; });
+detailDialog.querySelector('[data-detail-close]').addEventListener('click', () => detailDialog.close());
+$('#course-detail-edit').addEventListener('click', () => {
+  const course = findCourse(detailCourseId);
+  if (!course) return;
+  courseEditForm.open(course);
+  markCourseEditClean();
+});
 
 // ---- Settings dialog ----
 
@@ -176,6 +263,7 @@ const markCourseClean = guardDialog($('#course-dialog'));
 
 const actions = {
   task: doTask,
+  openCourse,
   settings: () => { openSettings(); markSettingsClean(); },
   addCourse: () => { courseWizard.open(); markCourseClean(); },
 };

@@ -30,7 +30,7 @@ const isOnBreak = (s, iso) => breaksOf(s).some((b) => b.from <= iso && iso <= b.
 const isInSemester = (s, iso) => datesAreUsable(s) && s.startDate <= iso && iso <= s.endDate;
 
 /** Regular weekday lectures outside breaks, before one-off changes. */
-const regularDates = (s) => {
+export const regularDates = (s) => {
   const span = daysBetween(s.startDate, s.endDate);
   return Array.from({ length: span + 1 }, (_, i) => addDays(s.startDate, i))
     .filter((iso) => s.weekdays.includes(dayOfWeek(iso)) && !isOnBreak(s, iso));
@@ -119,3 +119,9 @@ export const withLectureRemoved = (s, iso) => (addedOf(s).includes(iso)
 export const withLectureAdded = (s, iso) => (removedOf(s).includes(iso)
   ? { ...s, removedDates: withoutOne(removedOf(s), iso) }
   : { ...s, addedDates: [...addedOf(s), iso].sort() });
+
+/** Drops cancellations that no longer fall on a regular lecture day (e.g. after the weekdays changed). */
+export const pruneRemoved = (s) => {
+  const regular = new Set(regularDates(s));
+  return { ...s, removedDates: removedOf(s).filter((iso) => regular.has(iso)) };
+};
