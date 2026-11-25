@@ -57,21 +57,22 @@ test('the detail header carries name, short pill, full status and lecture progre
     status: 'behind',
     pillText: 'Behind',
     statusText: '5 lectures behind',
-    progress: 0.25,
-    progressText: '6 of 24 lectures',
+    progress: {
+      out: 11 / 24, watched: 0.25, label: '6 of 24 lectures watched, 11 out', legend: { watched: '6 watched', out: '11 of 24 out' },
+    },
   });
 });
 
 test('the detail header has no progress for a course without lectures', () => {
   const header = detailHeader(planned({ lectures: null, status: 'ok', statusText: 'On track' }));
   assert.equal(header.progress, null);
-  assert.equal(header.progressText, null);
   assert.equal(header.pillText, 'On track');
 });
 
 test('the detail header shows a finished course as done', () => {
   const header = detailHeader(planned({ status: 'done', statusText: 'All done', lectures: { watched: 24, total: 24, released: 24 } }));
   assert.equal(header.pillText, 'Done');
-  assert.equal(header.progress, 1);
-  assert.equal(header.progressText, 'All 24 lectures');
+  assert.equal(header.progress.watched, 1);
+  assert.equal(header.progress.out, 1);
+  assert.deepEqual(header.progress.legend, { watched: 'All 24 watched', out: null });
 });

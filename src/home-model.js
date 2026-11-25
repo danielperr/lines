@@ -2,6 +2,7 @@
 // planner's output. Pure — dates stay ISO here and are formatted by the view.
 
 import { formatHours } from './dom.js';
+import { lectureProgress, lectureText } from './progress-model.js';
 
 const singular = (unit) => unit.replace(/s$/, '');
 const amount = (n, unit) => `${n} ${n === 1 ? singular(unit) : unit}`;
@@ -66,11 +67,9 @@ export const homeStatus = (courses) => {
   return courses.every((c) => c.status === 'done') ? { status: 'done', text: 'All done' } : { status: 'ok', text: 'On track' };
 };
 
-const lecturesText = (lectures) => (lectures ? `${lectures.watched} of ${lectures.total} lectures watched` : null);
-
 /** One course-list card from a planned course and its color key. */
 export const courseRow = (course, color) => {
-  const lectureLine = lecturesText(course.lectures);
+  const progress = lectureProgress(course.lectures);
   return {
     id: course.id,
     name: course.name,
@@ -79,12 +78,12 @@ export const courseRow = (course, color) => {
     statusText: course.statusText,
     pillText: PILL_TEXT[course.status],
     signals: course.signals.map(({ status, text }) => ({ status, text })),
-    progress: course.lectures && course.lectures.total ? course.lectures.watched / course.lectures.total : null,
-    lecturesText: lectureLine,
+    progress,
+    lecturesText: progress ? lectureText(course.lectures) : null,
     milestone: course.nextMilestone
       ? { title: course.nextMilestone.title, date: course.nextMilestone.date, daysTo: course.nextMilestone.daysTo }
       : null,
     prepNotice: course.nextPrep ? { title: course.nextPrep.title, opensOn: course.nextPrep.opensOn } : null,
-    label: [`${course.name}: ${course.statusText}.`, lectureLine ? `${lectureLine}.` : null].filter(Boolean).join(' '),
+    label: [`${course.name}: ${course.statusText}.`, progress ? `${progress.label}.` : null].filter(Boolean).join(' '),
   };
 };

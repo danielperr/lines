@@ -7,6 +7,11 @@ import { courseTimeline } from './course/timeline.js';
 import { detailHeader, kindLabel, lectureLine, prepLine, splitTimeline, timelineRow } from './detail-model.js';
 import { progressBar, stepButtons } from './view-parts.js';
 
+// Key for the two bar layers; the bar itself carries the spoken label.
+const progressLegend = (legend) => h('div', { class: 'progress-legend', 'aria-hidden': 'true' },
+  h('span', { class: 'legend-watched' }, legend.watched),
+  legend.out ? h('span', { class: 'legend-out' }, legend.out) : null);
+
 // Header band in the course's solid color. The name repeats the sheet title,
 // which stays the dialog's accessible name, so it is hidden from screen readers.
 const headerBand = (planned) => {
@@ -18,7 +23,7 @@ const headerBand = (planned) => {
     h('p', { class: 'detail-hero-status' }, head.statusText),
     head.progress === null ? null : h('div', { class: 'detail-hero-progress' },
       progressBar(head.progress),
-      h('span', { class: 'detail-hero-progress-text' }, head.progressText)),
+      progressLegend(head.progress.legend)),
     planned.nextPrep
       ? h('p', { class: 'detail-hero-note' }, `${planned.nextPrep.title} prep starts ${formatDate(planned.nextPrep.opensOn)}`)
       : null);

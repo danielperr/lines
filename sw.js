@@ -44,6 +44,7 @@ const APP_SHELL = [
   './src/dom.js',
   './src/extra-date-rows.js',
   './src/offline.js',
+  './src/progress-model.js',
   './src/scroll.js',
   './src/swatch-picker.js',
   './src/toast.js',

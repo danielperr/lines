@@ -58,8 +58,9 @@ test('a course row shows status, lecture progress and the next milestone', () =>
   const row = courseRow(plannedCourse());
   assert.equal(row.statusText, '3 lectures behind');
   assert.equal(row.status, 'tight');
-  assert.equal(row.progress, 0.4);
-  assert.equal(row.lecturesText, '4 of 10 lectures watched');
+  assert.equal(row.progress.out, 0.7);
+  assert.equal(row.progress.watched, 0.4);
+  assert.equal(row.lecturesText, '4 of 10 watched · 7 out');
   assert.deepEqual(row.milestone, { title: 'Midterm', date: '2026-12-01', daysTo: 8 });
   assert.equal(row.prepNotice, null);
 });
@@ -76,7 +77,7 @@ test('a course with no lectures has no lecture progress', () => {
 });
 
 test('a course row describes itself for screen readers in words', () => {
-  assert.equal(courseRow(plannedCourse()).label, 'Algorithms: 3 lectures behind. 4 of 10 lectures watched.');
+  assert.equal(courseRow(plannedCourse()).label, 'Algorithms: 3 lectures behind. 4 of 10 lectures watched, 7 out.');
 });
 
 // ---- Style C: color-coded cards ----

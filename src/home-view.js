@@ -63,7 +63,7 @@ const courseItem = (course, color, onOpen) => {
     row.signals.length
       ? h('div', { class: 'course-signals' }, row.signals.map((s) => h('span', { class: `status-${s.status}` }, s.text)))
       : null,
-    row.progress === null ? null : progressBar(row.progress, 'thin'),
+    row.progress === null ? null : progressBar(row.progress),
     meta.length ? h('div', { class: 'course-meta' }, meta.map((line) => h('span', {}, line))) : null);
 };
 

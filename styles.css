@@ -191,9 +191,21 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .status-behind, .status-overdue { --status: var(--behind); }
 .status-done { --status: var(--muted); }
 
-.progress { height: 6px; background: var(--fill-strong); border-radius: var(--radius-pill); overflow: hidden; }
-.progress-fill { height: 100%; background: var(--status, var(--course-solid)); border-radius: inherit; transition: width 0.25s; }
-.progress.thin { height: 4px; }
+/* Two layers on one track: lectures out (faint, the course's pace) under
+   lectures watched (solid, yours). The gap between them is the backlog. */
+.progress {
+  --bar-track: var(--fill-strong);
+  --bar-out: color-mix(in srgb, var(--course-solid) 38%, transparent);
+  --bar-fill: var(--course-solid);
+  position: relative;
+  height: 6px;
+  background: var(--bar-track);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.progress-out, .progress-fill { position: absolute; inset: 0 auto 0 0; border-radius: inherit; transition: width 0.25s; }
+.progress-out { background: var(--bar-out); }
+.progress-fill { background: var(--bar-fill); }
 
 /* Status pill: "On track", "2 behind". */
 .pill {
@@ -290,8 +302,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .course-card.status-done .pill { color: var(--muted); }
 .course-signals { display: grid; gap: 2px; font-size: var(--text-foot); font-weight: 700; }
 .course-signals > span { color: var(--status); }
-.course-card .progress { background: color-mix(in srgb, var(--course-ink) 14%, transparent); }
-.course-card .progress-fill { background: var(--course-solid); }
+.course-card .progress { --bar-track: color-mix(in srgb, var(--course-ink) 12%, transparent); }
 .course-meta { display: grid; gap: 2px; font-size: var(--text-foot); font-variant-numeric: tabular-nums; }
 
 /* ---- Course detail sheet ---- */
@@ -331,10 +342,20 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .detail-hero .pill { flex: none; margin-top: 4px; background: var(--surface); }
 .detail-hero.status-done .pill { color: var(--muted); }
 .detail-hero-status { font-size: var(--text-body); font-weight: 600; }
-.detail-hero-progress { display: flex; align-items: center; gap: 10px; }
-.detail-hero-progress .progress { flex: 1; background: color-mix(in srgb, var(--course-on) 22%, transparent); }
-.detail-hero-progress .progress-fill { background: var(--course-on); }
-.detail-hero-progress-text { flex: none; font-size: var(--text-foot); font-weight: 700; font-variant-numeric: tabular-nums; }
+.detail-hero-progress { display: grid; gap: 6px; }
+.detail-hero-progress .progress {
+  height: 8px;
+  --bar-track: color-mix(in srgb, var(--course-on) 18%, transparent);
+  --bar-out: color-mix(in srgb, var(--course-on) 45%, transparent);
+  --bar-fill: var(--course-on);
+}
+
+/* Legend: a dot in each layer's color before its text. */
+.progress-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: var(--text-foot); font-weight: 700; font-variant-numeric: tabular-nums; }
+.progress-legend > span { display: inline-flex; align-items: center; gap: 6px; }
+.progress-legend > span::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+.legend-watched::before { background: var(--course-on); }
+.legend-out::before { background: color-mix(in srgb, var(--course-on) 45%, transparent); }
 .detail-hero-note { font-size: var(--text-sub); }
 
 .detail-row { display: flex; align-items: center; gap: 12px; min-height: var(--row-height); padding: 8px 0; }
