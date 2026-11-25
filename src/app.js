@@ -15,6 +15,7 @@ import { createMilestoneForm } from './milestone-form.js';
 import { registerOffline } from './offline.js';
 import { hideWhileScrollingDown } from './scroll.js';
 import { enableSwipeToClose } from './sheet-swipe.js';
+import { enableBackdropClose } from './sheet-backdrop.js';
 import { createToast } from './toast.js';
 import { createUndo } from './undo.js';
 import { replacePrompt } from './backup.js';
@@ -180,7 +181,10 @@ const openCourse = (courseId) => {
 };
 
 detailDialog.addEventListener('close', () => { detailCourseId = null; });
-document.querySelectorAll('dialog.sheet').forEach(enableSwipeToClose);
+document.querySelectorAll('dialog.sheet').forEach((sheet) => {
+  enableSwipeToClose(sheet);
+  enableBackdropClose(sheet);
+});
 detailDialog.querySelector('[data-detail-close]').addEventListener('click', () => detailDialog.close());
 $('#course-detail-edit').addEventListener('click', () => {
   const course = findCourse(detailCourseId);

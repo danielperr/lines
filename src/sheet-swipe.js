@@ -58,7 +58,7 @@ const slideOutAndClose = (dialog) => {
 };
 
 /** Asks like Escape does: a listener may cancel the close (unsaved changes). */
-const requestClose = (dialog) => {
+export const requestClose = (dialog) => {
   const event = new Event('cancel', { cancelable: true });
   dialog.dispatchEvent(event);
   if (event.defaultPrevented) snapBack(dialog);
