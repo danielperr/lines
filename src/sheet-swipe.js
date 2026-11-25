@@ -1,9 +1,9 @@
 // Swipe down to close a bottom sheet, as on iOS. A drag starts on the header
-// (grabber and bar) at any time, or anywhere once the sheet is scrolled to the
-// top. Closing goes through the dialog's `cancel` event, so the unsaved-changes
-// guard still gets to ask; the close itself is the stylesheet's dialog
-// transition. Phone layout and touch only: wider screens show a centered card
-// without a grabber.
+// (the bar with Cancel and Save) at any time, or anywhere once the sheet is
+// scrolled to the top. Closing goes through the dialog's `cancel` event, so
+// the unsaved-changes guard still gets to ask; the close itself is the
+// stylesheet's dialog transition. Phone layout and touch only: wider screens
+// show a centered card, which closes by tapping outside it instead.
 
 const CLOSE_DISTANCE = 140; // px; or a quarter of the sheet, if less
 const MIN_FLICK_DISTANCE = 30; // px
