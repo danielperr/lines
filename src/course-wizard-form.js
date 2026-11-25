@@ -9,6 +9,7 @@ import { readBreaks, wireAddBreak } from './break-rows.js';
 import { readExtraDates, wireAddExtraDate } from './extra-date-rows.js';
 import { deadlineRow, readDeadline, renumberRows } from './wizard-deadline-row.js';
 import { createSwatchPicker } from './swatch-picker.js';
+import { animatePageChange } from './step-transition.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const STEP_NAMES = Object.freeze({ name: 'Name', lectures: 'Lectures', deadlines: 'Exams & assignments', review: 'Review' });
@@ -100,7 +101,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames, getNextColo
     row.querySelector('input').focus();
   };
 
-  const showStep = (index) => {
+  const swapTo = (index) => {
     stepIndex = index;
     const step = WIZARD_STEPS[index];
     steps.forEach((el) => { el.hidden = el.dataset.step !== step; });
@@ -111,6 +112,20 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames, getNextColo
     errorsEl.textContent = '';
     if (step === 'review') $('#wizard-summary').replaceChildren(summaryList(courseSummary(readDraft(), today())));
     form.querySelector(`[data-step="${step}"] h2`).focus();
+  };
+
+  /** Moves to step `index`; `animate` fades the page and eases the sheet height. */
+  const showStep = (index, { animate = true } = {}) => {
+    if (!animate) {
+      swapTo(index);
+      return;
+    }
+    animatePageChange({
+      sheet: dialog,
+      fromPage: steps.find((el) => !el.hidden),
+      swap: () => swapTo(index),
+      getToPage: () => steps.find((el) => !el.hidden),
+    });
   };
 
   const open = () => {
@@ -127,7 +142,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames, getNextColo
     syncLectureToggle();
     syncDeadlinesEmpty();
     dialog.showModal();
-    showStep(0);
+    showStep(0, { animate: false });
   };
 
   const finish = () => {

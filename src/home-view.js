@@ -4,6 +4,7 @@ import { h, formatDate, formatRelativeDays } from './dom.js';
 import { courseRow, homeStatus, todayCards, todaySummary } from './home-model.js';
 import { progressBar } from './view-parts.js';
 import { COLOR_KEYS } from './course/color.js';
+import { celebrate, celebrationSpot } from './celebrate.js';
 
 const summaryBar = (plan, weeklyHours, onSettings) => {
   const count = plan.courses.length;
@@ -14,13 +15,20 @@ const summaryBar = (plan, weeklyHours, onSettings) => {
     h('button', { class: 'btn-plain summary-hours', type: 'button', onClick: onSettings }, `${weeklyHours}h / week`));
 };
 
+// Positions are read before the task redraws the screen; the effect plays after.
+const celebrateTask = (button, runTask) => {
+  const spot = celebrationSpot(button);
+  runTask();
+  celebrate(spot);
+};
+
 const taskItem = (row, onTask) => h('li', { class: 'task' },
   h('div', { class: 'task-text' },
     h('span', { class: 'task-title' }, row.title),
     h('span', { class: 'task-detail' }, row.detail)),
-  h('button', { class: 'step plus task-done', type: 'button', 'aria-label': row.plusLabel, onClick: () => onTask(row.action) }, '+1'));
+  h('button', { class: 'step plus task-done', type: 'button', 'aria-label': row.plusLabel, onClick: (e) => celebrateTask(e.currentTarget, () => onTask(row.action)) }, '+1'));
 
-const todayCard = (card, onTask) => h('section', { class: 'today-card', dataset: { color: card.color }, 'aria-label': card.courseName },
+const todayCard = (card, onTask) => h('section', { class: 'today-card', dataset: { color: card.color, courseId: card.courseId }, 'aria-label': card.courseName },
   h('div', { class: 'today-card-head' },
     h('h3', { class: 'today-card-name' }, card.courseName),
     card.hoursText ? h('span', { class: 'today-card-hours' }, card.hoursText) : null),
@@ -77,19 +85,22 @@ const coursesSection = (courses, colors, onAddCourse, onOpen) => h('section', { 
 const paletteRow = () => h('div', { class: 'welcome-palette', 'aria-hidden': 'true' },
   COLOR_KEYS.map((key) => h('span', { dataset: { color: key } })));
 
-const welcome = (onAddCourse) => h('div', { class: 'empty welcome' },
+const welcome = (onAddCourse, onImport) => h('div', { class: 'empty welcome' },
   paletteRow(),
   h('h2', {}, 'Let\'s set up your semester'),
   h('p', { class: 'muted' }, 'Add one course at a time: its lecture days, exams and assignments. The app then works out what to do each day.'),
-  h('button', { class: 'btn btn-filled', type: 'button', onClick: onAddCourse }, 'Add your first course'));
+  h('button', { class: 'btn btn-filled', type: 'button', onClick: onAddCourse }, 'Add your first course'),
+  h('div', { class: 'welcome-import' },
+    h('p', { class: 'muted' }, 'Moving from another device?'),
+    h('button', { class: 'btn-plain', type: 'button', onClick: onImport }, 'Import a backup')));
 
 /**
  * `colors`: Map of course id → color key (see colorsById).
- * `actions`: { task(action), addCourse(), settings(), openCourse(id) }.
+ * `actions`: { task(action), addCourse(), settings(), openCourse(id), importBackup() }.
  */
 export const renderHome = (root, { plan, colors, weeklyHours, actions }) => {
   const sections = plan.courses.length === 0
-    ? [welcome(actions.addCourse)]
+    ? [welcome(actions.addCourse, actions.importBackup)]
     : [
       summaryBar(plan, weeklyHours, actions.settings),
       todaySection(plan.today, colors, actions.task),

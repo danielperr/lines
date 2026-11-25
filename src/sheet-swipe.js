@@ -1,8 +1,9 @@
 // Swipe down to close a bottom sheet, as on iOS. A drag starts on the header
 // (grabber and bar) at any time, or anywhere once the sheet is scrolled to the
 // top. Closing goes through the dialog's `cancel` event, so the unsaved-changes
-// guard still gets to ask. Phone layout and touch only: wider screens show a
-// centered card without a grabber.
+// guard still gets to ask; the close itself is the stylesheet's dialog
+// transition. Phone layout and touch only: wider screens show a centered card
+// without a grabber.
 
 const CLOSE_DISTANCE = 140; // px; or a quarter of the sheet, if less
 const MIN_FLICK_DISTANCE = 30; // px
@@ -31,37 +32,36 @@ export const gestureIntent = ({ dx, dy, atTop, onHeader }) => {
 
 // ---- Wiring (DOM) ----
 
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-const moveTo = (dialog, offset, ms = 0) => {
-  dialog.style.transition = ms ? `transform ${ms}ms ease-out` : 'none';
-  dialog.style.transform = offset ? `translateY(${offset}px)` : '';
-};
-
 const resetStyle = (dialog) => {
   dialog.style.transition = '';
   dialog.style.transform = '';
 };
 
+/** Follows the finger with no easing. */
+const follow = (dialog, offset) => {
+  dialog.style.transition = 'none';
+  dialog.style.transform = `translateY(${offset}px)`;
+};
+
+/** Springs back to the open position, then hands motion back to the stylesheet. */
+const snapBack = (dialog) => {
+  dialog.style.transition = `transform ${SNAP_MS}ms ease-out`;
+  dialog.style.transform = '';
+  setTimeout(() => { if (!dialog.style.transform) resetStyle(dialog); }, SNAP_MS);
+};
+
+// Dropping the inline transform while closing lets the stylesheet's close
+// transition carry the sheet down from where the finger let go.
 const slideOutAndClose = (dialog) => {
-  if (prefersReducedMotion()) {
-    dialog.close();
-    resetStyle(dialog);
-    return;
-  }
-  dialog.style.transition = `transform ${SNAP_MS}ms ease-in`;
-  dialog.style.transform = 'translateY(100%)';
-  setTimeout(() => {
-    dialog.close();
-    resetStyle(dialog);
-  }, SNAP_MS);
+  resetStyle(dialog);
+  dialog.close();
 };
 
 /** Asks like Escape does: a listener may cancel the close (unsaved changes). */
 const requestClose = (dialog) => {
   const event = new Event('cancel', { cancelable: true });
   dialog.dispatchEvent(event);
-  if (event.defaultPrevented) moveTo(dialog, 0, SNAP_MS);
+  if (event.defaultPrevented) snapBack(dialog);
   else slideOutAndClose(dialog);
 };
 
@@ -93,7 +93,7 @@ export const enableSwipeToClose = (dialog) => {
       gesture.startedAt = e.timeStamp;
     }
     e.preventDefault(); // keep the page from scrolling or bouncing while dragging
-    moveTo(dialog, dragOffset(touch.clientY - gesture.y));
+    follow(dialog, dragOffset(touch.clientY - gesture.y));
   }, { passive: false });
 
   const finish = (e, cancelled) => {
@@ -103,7 +103,7 @@ export const enableSwipeToClose = (dialog) => {
     const dy = (e.changedTouches[0]?.clientY ?? done.y) - done.y;
     const close = !cancelled && shouldClose({ dy, ms: e.timeStamp - done.startedAt, height: dialog.offsetHeight });
     if (close) requestClose(dialog);
-    else moveTo(dialog, 0, SNAP_MS);
+    else snapBack(dialog);
   };
 
   dialog.addEventListener('touchend', (e) => finish(e, false));

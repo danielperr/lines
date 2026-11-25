@@ -17,6 +17,7 @@ import { hideWhileScrollingDown } from './scroll.js';
 import { enableSwipeToClose } from './sheet-swipe.js';
 import { createToast } from './toast.js';
 import { createUndo } from './undo.js';
+import { replacePrompt } from './backup.js';
 
 const $ = (selector) => document.querySelector(selector);
 const root = $('#app');
@@ -219,25 +220,41 @@ $('#export-btn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-$('#import-input').addEventListener('change', async (e) => {
-  const [file] = e.target.files;
-  e.target.value = '';
-  if (!file) return;
+/** Reads a backup file and replaces the data, asking first if courses would be lost. */
+const importBackup = async (file, { onError, onDone }) => {
   try {
     const result = parseState(await file.text());
     if (!result.ok) {
-      $('#settings-errors').textContent = `Import failed: ${result.error}`;
+      onError(`Import failed: ${result.error}`);
       return;
     }
-    const count = result.state.courses.length;
-    if (!window.confirm(`Replace your current data with ${count} course${count === 1 ? '' : 's'}?`)) return;
+    const question = replacePrompt(state.courses.length, result.state.courses.length);
+    if (question && !window.confirm(question)) return;
     commit(result.state);
-    settingsDialog.close();
-    toast('Import complete.');
+    onDone();
+    const count = result.state.courses.length;
+    toast(`Imported ${count} course${count === 1 ? '' : 's'}.`);
   } catch (error) {
-    $('#settings-errors').textContent = `Could not read the file: ${error.message}`;
+    onError(`Could not read the file: ${error.message}`);
   }
+};
+
+/** Runs `onFile` with the file picked in `input`, then clears it so the same file can be picked again. */
+const onFilePicked = (input, onFile) => input.addEventListener('change', () => {
+  const [file] = input.files;
+  input.value = '';
+  if (file) onFile(file);
 });
+
+onFilePicked($('#import-input'), (file) => importBackup(file, {
+  onError: (message) => { $('#settings-errors').textContent = message; },
+  onDone: () => settingsDialog.close(),
+}));
+
+// The welcome screen's "Import a backup" uses its own picker; errors go to a toast.
+const welcomeImportInput = h('input', { type: 'file', accept: 'application/json,.json', hidden: true, 'aria-hidden': 'true' });
+document.body.append(welcomeImportInput);
+onFilePicked(welcomeImportInput, (file) => importBackup(file, { onError: toast, onDone: () => {} }));
 
 // ---- Wiring ----
 
@@ -247,6 +264,7 @@ const markCourseClean = guardDialog($('#course-dialog'));
 const actions = {
   task: doTask,
   openCourse,
+  importBackup: () => welcomeImportInput.click(),
   settings: () => { openSettings(); markSettingsClean(); },
   addCourse: () => { courseWizard.open(); markCourseClean(); },
 };
