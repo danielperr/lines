@@ -1,6 +1,7 @@
 # UI overhaul: style C (color-coded cards)
 
-Status: planned, not started. Base: `review` @ 6c09010 (course-first model).
+Status: done, all six phases committed on `claude/ui-style-selection-7f09f8`. Base: `review` @ 6c09010 (course-first model).
+Screenshots: `docs/screenshots/style-c-*.jpg` (375px, light and dark).
 
 ## Decisions
 
@@ -57,6 +58,10 @@ Status: planned, not started. Base: `review` @ 6c09010 (course-first model).
 6. **Polish and verification.** Check light and dark mode on a 375px viewport, focus rings,
    reduced motion, long course names, a 9th course (palette wraps around). Bump the service
    worker cache. Screenshots for review.
+   - Done: an in-page contrast audit of every visible text element (home, all course sheets,
+     edit, milestone, wizard, settings, toast) found no pair under 4.5:1 (3:1 large) in
+     either mode. No manual cache bump is needed: `npm run build` stamps the cache name with
+     a content hash. Fixed the detail sheet's Edit button drifting to the center.
 
 ## Risks
 

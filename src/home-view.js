@@ -3,6 +3,7 @@
 import { h, formatDate, formatRelativeDays } from './dom.js';
 import { courseRow, homeStatus, todayCards, todaySummary } from './home-model.js';
 import { progressBar } from './view-parts.js';
+import { COLOR_KEYS } from './course/color.js';
 
 const summaryBar = (plan, weeklyHours, onSettings) => {
   const count = plan.courses.length;
@@ -72,7 +73,12 @@ const coursesSection = (courses, colors, onAddCourse, onOpen) => h('section', { 
     h('button', { class: 'btn-plain', type: 'button', onClick: onAddCourse }, '+ Course')),
   h('ul', { class: 'course-list' }, courses.map((course) => courseItem(course, colors.get(course.id), onOpen))));
 
+// Decorative: a row of the course colors hints at what the app will look like.
+const paletteRow = () => h('div', { class: 'welcome-palette', 'aria-hidden': 'true' },
+  COLOR_KEYS.map((key) => h('span', { dataset: { color: key } })));
+
 const welcome = (onAddCourse) => h('div', { class: 'empty welcome' },
+  paletteRow(),
   h('h2', {}, 'Let\'s set up your semester'),
   h('p', { class: 'muted' }, 'Add one course at a time: its lecture days, exams and assignments. The app then works out what to do each day.'),
   h('button', { class: 'btn btn-filled', type: 'button', onClick: onAddCourse }, 'Add your first course'));
