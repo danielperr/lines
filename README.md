@@ -28,6 +28,13 @@ npm test                 # node --test, no dependencies
 npm run build            # dist/ with a content-hashed offline cache
 ```
 
+## Workflow and deploys
+
+Work branches off `dev` and merges back into it by PR; `dev` is promoted to
+`main` for releases. Pushes to `dev` deploy the dev site, pushes to `main`
+deploy production (study.danielperr.com), both via Cloudflare Workers Builds.
+Manual deploys are forbidden. Full rules: [AGENTS.md](AGENTS.md).
+
 ## Layout
 
 - `src/course/` — pure model and planning (no DOM): schedule, course,

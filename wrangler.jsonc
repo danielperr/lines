@@ -2,7 +2,8 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "study-deadlines",
   "compatibility_date": "2026-11-23",
-  // Only the built app is published; run `npm run build` first (npm run deploy does).
+  // Deploys run only in Cloudflare Workers Builds (push to main → prod, push to dev → dev).
+  // Manual deploys are forbidden; see AGENTS.md. Only the built app (./dist) is published.
   "assets": {
     "directory": "./dist"
   },
@@ -13,15 +14,14 @@
     { "pattern": "study.danielperr.com", "custom_domain": true }
   ],
   "env": {
-    // Review stage: `npm run deploy:review` publishes to a separate Worker
-    // (study-deadlines-review) on workers.dev only. Routes are cleared so it
-    // can never take over the production domain.
-    "review": {
-      "name": "study-deadlines-review",
+    // Dev stage: Workers Builds runs `wrangler deploy --env dev` on every push to
+    // the dev branch, publishing a separate Worker (study-deadlines-dev) on
+    // workers.dev only. Routes stay empty so it can never take over the
+    // production domain.
+    "dev": {
+      "name": "study-deadlines-dev",
       "workers_dev": true,
       "routes": []
     }
-  },
-  // Required by `wrangler preview` (Cloudflare preview deployments). Empty = inherit top-level settings.
-  "previews": {}
+  }
 }
