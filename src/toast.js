@@ -14,7 +14,7 @@ export const createToast = (el) => {
   let onActionHandler = null;
 
   const place = () => {
-    const host = [...document.querySelectorAll('dialog[open]')].at(-1) ?? document.body;
+    const host = [...document.querySelectorAll('dialog[open]:not(.is-closing)')].at(-1) ?? document.body;
     if (el.parentElement !== host) host.append(el);
   };
 

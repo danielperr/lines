@@ -1,15 +1,25 @@
 // Swipe down to close a bottom sheet, as on iOS. A drag starts on the header
 // (the bar with Cancel and Save) at any time, or anywhere once the sheet is
-// scrolled to the top. Closing goes through the dialog's `cancel` event, so
-// the unsaved-changes guard still gets to ask; the close itself is the
-// stylesheet's dialog transition. Phone layout and touch only: wider screens
-// show a centered card, which closes by tapping outside it instead.
+// scrolled to the top. Letting go closes the sheet only when the finger is
+// still moving down fast (a flick), or after dragging it most of the way
+// down; otherwise it springs back up. Closing goes through the dialog's
+// `cancel` event, so the unsaved-changes guard still gets to ask, and the
+// sheet keeps sliding at the finger's speed (sheet-motion.js). Phone layout
+// and touch only: wider screens show a centered card, which closes by
+// tapping outside it instead.
 
-const CLOSE_DISTANCE = 140; // px; or a quarter of the sheet, if less
-const MIN_FLICK_DISTANCE = 30; // px
-const FLICK_SPEED = 0.5; // px per ms
+import { animateSheetClose, closeSheet } from './sheet-motion.js';
+
+/** Tuning for the swipe. Adjust here. */
+export const SWIPE = Object.freeze({
+  closeFraction: 0.6, // drag this share of the sheet's height down and let go to close
+  flickSpeed: 0.5, // px/ms; moving down at least this fast on release closes
+  minFlickDistance: 30, // px; a flick must also have moved the sheet this far
+  velocityWindowMs: 100, // release speed is measured over this last stretch of the drag
+});
 const START_SLOP = 8; // px before a move counts as a gesture
-const SNAP_MS = 200;
+const SNAP_MS = 260;
+const SNAP_EASE = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const PHONE_LAYOUT = '(max-width: 599px)';
 
 // ---- Rules (pure) ----
@@ -17,10 +27,25 @@ const PHONE_LAYOUT = '(max-width: 599px)';
 /** How far the sheet moves for a finger movement: down only. */
 export const dragOffset = (dy) => Math.max(0, dy);
 
-/** Whether letting go after a drag of `dy` px over `ms` should close the sheet. */
-export const shouldClose = ({ dy, ms, height }) => {
-  if (dy >= Math.min(CLOSE_DISTANCE, height / 4)) return true;
-  return dy >= MIN_FLICK_DISTANCE && dy / Math.max(ms, 1) >= FLICK_SPEED;
+/**
+ * The finger's speed (px/ms, + is down) when it let go at `releasedAt`, from
+ * the `samples` ({ y, t }) of the last `velocityWindowMs`. Zero when the
+ * finger had stopped before letting go.
+ */
+export const releaseVelocity = (samples, releasedAt, windowMs = SWIPE.velocityWindowMs) => {
+  const last = samples.at(-1);
+  if (!last || releasedAt - last.t > windowMs) return 0;
+  const recent = samples.filter((s) => last.t - s.t <= windowMs);
+  const first = recent[0];
+  const ms = last.t - first.t;
+  return ms > 0 ? (last.y - first.y) / ms : 0;
+};
+
+/** Whether letting go after a drag of `dy` px, moving at `velocity`, should close the sheet. */
+export const shouldClose = ({ dy, velocity, height }, swipe = SWIPE) => {
+  if (velocity <= -swipe.flickSpeed) return false; // thrown back up
+  if (dy >= height * swipe.closeFraction) return true;
+  return dy >= swipe.minFlickDistance && velocity >= swipe.flickSpeed;
 };
 
 /** 'drag' to move the sheet, 'scroll' to leave the gesture alone, 'wait' if too small to tell. */
@@ -45,28 +70,22 @@ const follow = (dialog, offset) => {
 
 /** Springs back to the open position, then hands motion back to the stylesheet. */
 const snapBack = (dialog) => {
-  dialog.style.transition = `transform ${SNAP_MS}ms ease-out`;
+  dialog.style.transition = `transform ${SNAP_MS}ms ${SNAP_EASE}`;
   dialog.style.transform = '';
   setTimeout(() => { if (!dialog.style.transform) resetStyle(dialog); }, SNAP_MS);
 };
 
-// Dropping the inline transform while closing lets the stylesheet's close
-// transition carry the sheet down from where the finger let go.
-const slideOutAndClose = (dialog) => {
-  resetStyle(dialog);
-  dialog.close();
-};
-
 /** Asks like Escape does: a listener may cancel the close (unsaved changes). */
-export const requestClose = (dialog) => {
+export const requestClose = (dialog, { velocity = 0 } = {}) => {
   const event = new Event('cancel', { cancelable: true });
   dialog.dispatchEvent(event);
   if (event.defaultPrevented) snapBack(dialog);
-  else slideOutAndClose(dialog);
+  else closeSheet(dialog, { velocity });
 };
 
 /** Lets the user swipe `dialog` down to close it. */
 export const enableSwipeToClose = (dialog) => {
+  animateSheetClose(dialog, requestClose);
   let gesture = null;
 
   dialog.addEventListener('touchstart', (e) => {
@@ -75,7 +94,7 @@ export const enableSwipeToClose = (dialog) => {
     gesture = {
       x: touch.clientX,
       y: touch.clientY,
-      startedAt: e.timeStamp,
+      samples: [],
       onHeader: Boolean(e.target.closest('.sheet-top')),
       intent: 'wait',
     };
@@ -90,8 +109,9 @@ export const enableSwipeToClose = (dialog) => {
       gesture.intent = gestureIntent({ dx, dy, atTop: dialog.scrollTop <= 0, onHeader: gesture.onHeader });
       if (gesture.intent !== 'drag') return;
       gesture.y = touch.clientY; // start from here so the sheet doesn't jump by the slop
-      gesture.startedAt = e.timeStamp;
     }
+    gesture.samples = [...gesture.samples, { y: touch.clientY, t: e.timeStamp }]
+      .filter((s) => e.timeStamp - s.t <= SWIPE.velocityWindowMs * 2);
     e.preventDefault(); // keep the page from scrolling or bouncing while dragging
     follow(dialog, dragOffset(touch.clientY - gesture.y));
   }, { passive: false });
@@ -101,8 +121,9 @@ export const enableSwipeToClose = (dialog) => {
     gesture = null;
     if (!done || done.intent !== 'drag') return;
     const dy = (e.changedTouches[0]?.clientY ?? done.y) - done.y;
-    const close = !cancelled && shouldClose({ dy, ms: e.timeStamp - done.startedAt, height: dialog.offsetHeight });
-    if (close) requestClose(dialog);
+    const velocity = releaseVelocity(done.samples, e.timeStamp);
+    const close = !cancelled && shouldClose({ dy, velocity, height: dialog.offsetHeight });
+    if (close) requestClose(dialog, { velocity });
     else snapBack(dialog);
   };
 
