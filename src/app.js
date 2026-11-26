@@ -13,7 +13,6 @@ import { createCourseWizard } from './course-wizard-form.js';
 import { renderHome } from './home-view.js';
 import { createMilestoneForm } from './milestone-form.js';
 import { registerOffline } from './offline.js';
-import { hideWhileScrollingDown } from './scroll.js';
 import { enableSwipeToClose } from './sheet-swipe.js';
 import { enableBackdropClose } from './sheet-backdrop.js';
 import { createToast } from './toast.js';
@@ -274,7 +273,6 @@ const actions = {
 };
 
 $('#add-btn').addEventListener('click', () => actions.addCourse());
-hideWhileScrollingDown($('#add-btn'), 'fab-hidden');
 
 // iOS Safari only applies :active (pressed styles) when a touch listener exists.
 document.addEventListener('touchstart', () => {}, { passive: true });

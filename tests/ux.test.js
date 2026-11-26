@@ -2,7 +2,6 @@ import { test, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createUndo } from '../src/undo.js';
 import { createChangeGuard } from '../src/change-guard.js';
-import { scrollDirection } from '../src/scroll.js';
 
 const fakeToast = () => {
   const calls = [];
@@ -83,11 +82,4 @@ test('change guard asks before discarding edits and respects the answer', () => 
   value = 'a';
   answer = false;
   assert.equal(guard.mayClose(), true, 'changing a field back is not an edit');
-});
-
-test('scroll direction ignores small jitters', () => {
-  assert.equal(scrollDirection(100, 104), null);
-  assert.equal(scrollDirection(100, 140), 'down');
-  assert.equal(scrollDirection(140, 100), 'up');
-  assert.equal(scrollDirection(30, 0), 'up');
 });

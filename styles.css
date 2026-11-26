@@ -140,7 +140,8 @@ button:disabled { cursor: default; }
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: calc(8px + env(safe-area-inset-top)) var(--gutter) 8px;
+  /* Room below the status bar: iOS blurs content near the top screen edge. */
+  padding: calc(20px + env(safe-area-inset-top)) var(--gutter) 8px;
   background: color-mix(in srgb, var(--bg) 82%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
@@ -414,9 +415,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
   font-weight: 400;
   line-height: 1;
   box-shadow: var(--shadow-float);
-  transition: transform 200ms ease-out, opacity 200ms ease-out;
 }
-.fab.fab-hidden { transform: translateY(calc(100% + 40px)); opacity: 0; pointer-events: none; }
 
 /* ---- Toast ---- */
 
