@@ -1,7 +1,8 @@
 // Home screen: today's tasks as one colored card per course, then the
 // course list as tinted cards. Colors come in as a course id → key map.
-import { h, formatDate, formatRelativeDays } from './dom.js';
+import { h, formatDate, formatHours, formatRelativeDays } from './dom.js';
 import { courseRow, homeStatus, todayCards, todaySummary } from './home-model.js';
+import { catchUp, nextDeadline } from './home-stats.js';
 import { progressBar } from './view-parts.js';
 import { COLOR_KEYS } from './course/color.js';
 import { celebrate, celebrationSpot } from './celebrate.js';
@@ -13,6 +14,42 @@ const summaryBar = (plan, weeklyHours, onSettings) => {
     h('span', { class: 'summary-text' }, todaySummary(plan.today) ?? `${count} course${count === 1 ? '' : 's'}`),
     h('span', { class: `pill status-${status.status}` }, status.text),
     h('button', { class: 'btn-plain summary-hours', type: 'button', onClick: onSettings }, `${weeklyHours}h / week`));
+};
+
+const lectureWord = (n) => `${n} lecture${n === 1 ? '' : 's'}`;
+
+const statTile = ({ label, value, detail, color, status }) => h('div', {
+  class: `stat${status ? ` status-${status}` : ''}`,
+  dataset: color ? { color } : {},
+},
+  h('span', { class: 'stat-label' }, label),
+  h('span', { class: 'stat-value' }, value),
+  h('span', { class: 'stat-detail' }, detail));
+
+const deadlineTile = (deadline, colors) => (deadline
+  ? statTile({
+    label: 'Next deadline',
+    value: deadline.title,
+    detail: `${deadline.courseName} · ${formatDate(deadline.date)} (${formatRelativeDays(deadline.daysTo)})`,
+    color: colors.get(deadline.courseId),
+  })
+  : statTile({ label: 'Next deadline', value: 'None ahead', detail: 'No exams or assignments left' }));
+
+const catchUpTile = (backlog) => (backlog.lectures > 0
+  ? statTile({
+    label: 'To catch up',
+    value: formatHours(backlog.hours),
+    detail: `${lectureWord(backlog.lectures)} out, not watched`,
+    status: 'behind',
+  })
+  : statTile({ label: 'To catch up', value: 'Caught up', detail: 'Every lecture out is watched', status: 'ok' }));
+
+// Two tiles under the summary: the soonest deadline and the lecture backlog.
+const statsRow = (courses, colors) => {
+  const backlog = catchUp(courses);
+  return h('div', { class: 'stats' },
+    deadlineTile(nextDeadline(courses), colors),
+    backlog ? catchUpTile(backlog) : null);
 };
 
 // Positions are read before the task redraws the screen; the effect plays after.
@@ -103,6 +140,7 @@ export const renderHome = (root, { plan, colors, weeklyHours, actions }) => {
     ? [welcome(actions.addCourse, actions.importBackup)]
     : [
       summaryBar(plan, weeklyHours, actions.settings),
+      statsRow(plan.courses, colors),
       todaySection(plan.today, colors, actions.task),
       coursesSection(plan.courses, colors, actions.addCourse, actions.openCourse),
     ];

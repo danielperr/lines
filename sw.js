@@ -43,6 +43,7 @@ const APP_SHELL = [
   './src/course/store.js',
   './src/course/today.js',
   './src/home-model.js',
+  './src/home-stats.js',
   './src/home-view.js',
   './src/dates.js',
   './src/dom.js',
