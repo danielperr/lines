@@ -10,7 +10,9 @@ const appShell = readAppShell;
 
 test('every source module is available offline', () => {
   const shell = appShell();
-  const modules = readdirSync(new URL('src/', ROOT)).filter((f) => f.endsWith('.js')).map((f) => `./src/${f}`);
+  const modules = readdirSync(new URL('src/', ROOT), { recursive: true })
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => `./src/${f.split('\\').join('/')}`);
   const missing = modules.filter((m) => !shell.includes(m));
   assert.deepEqual(missing, [], `add these to APP_SHELL in sw.js: ${missing.join(', ')}`);
 });

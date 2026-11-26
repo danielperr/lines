@@ -1,15 +1,24 @@
-import { planSchedule } from './scheduler.js';
-import { DEFAULT_STATE, STORAGE_KEY, loadState, parseState, saveState, serializeState } from './storage.js';
-import { h, localTodayIso } from './dom.js';
+import { assignColor, colorsById, nextColor } from './course/color.js';
+import { addLecture, cancelLecture, removeMilestone, saveMilestone, setWatched, stepPrep } from './course/edit.js';
+import { planCourses } from './course/planner.js';
+import { releasedBy } from './course/schedule.js';
+import {
+  DEFAULT_STATE, LEGACY_STORAGE_KEY, STORAGE_KEY, loadState, parseState, saveState, serializeState,
+} from './course/store.js';
+import { h, formatDate, localTodayIso } from './dom.js';
 import { guardDialog } from './change-guard.js';
+import { renderCourseDetail } from './course-detail-view.js';
+import { createCourseEditForm } from './course-edit-form.js';
 import { createCourseWizard } from './course-wizard-form.js';
-import { createItemForm } from './item-form.js';
+import { renderHome } from './home-view.js';
+import { createMilestoneForm } from './milestone-form.js';
 import { registerOffline } from './offline.js';
-import { createTrackForm } from './track-form.js';
-import { releasedBy } from './tracks.js';
 import { hideWhileScrollingDown } from './scroll.js';
+import { enableSwipeToClose } from './sheet-swipe.js';
+import { enableBackdropClose } from './sheet-backdrop.js';
+import { createToast } from './toast.js';
 import { createUndo } from './undo.js';
-import { renderApp } from './view.js';
+import { replacePrompt } from './backup.js';
 
 const $ = (selector) => document.querySelector(selector);
 const root = $('#app');
@@ -17,32 +26,9 @@ const settingsDialog = $('#settings-dialog');
 const settingsForm = $('#settings-form');
 
 let state = null;
-let toastTimer = null;
-
-const TOAST_MS = 3500;
 const UNDO_MS = 6000;
 
-const toastEl = $('#toast');
-const toastText = $('#toast-text');
-const toastAction = $('#toast-action');
-let toastActionHandler = null;
-
-const hideToast = () => {
-  clearTimeout(toastTimer);
-  toastEl.hidden = true;
-  toastActionHandler = null;
-};
-
-const showToast = (message, onAction = null) => {
-  clearTimeout(toastTimer);
-  toastText.textContent = message;
-  toastAction.hidden = !onAction;
-  toastActionHandler = onAction;
-  toastEl.hidden = false;
-  if (!onAction) toastTimer = setTimeout(hideToast, TOAST_MS);
-};
-
-toastAction.addEventListener('click', () => toastActionHandler?.());
+const { show: showToast, hide: hideToast } = createToast($('#toast'));
 
 const undo = createUndo({ show: showToast, hide: hideToast, timeoutMs: UNDO_MS });
 
@@ -53,8 +39,9 @@ const toast = (message) => {
 };
 
 const render = () => {
-  const plan = planSchedule(state.items, state.weeklyHours, localTodayIso(), state.tracks);
-  renderApp(root, { plan, weeklyHours: state.weeklyHours, actions });
+  const plan = planCourses(state, localTodayIso());
+  renderHome(root, { plan, colors: colorsById(state.courses), weeklyHours: state.weeklyHours, actions });
+  renderDetail(plan);
 };
 
 const commit = (nextState) => {
@@ -74,60 +61,137 @@ const commitUndoable = (nextState, message) => {
   });
 };
 
-// ---- Item dialog ----
+const findCourse = (id) => state.courses.find((c) => c.id === id);
 
-const saveItem = (item) => {
-  const exists = state.items.some((existing) => existing.id === item.id);
-  commit({ ...state, items: exists ? state.items.map((i) => (i.id === item.id ? item : i)) : [...state.items, item] });
-  toast(`Saved "${item.title}"`);
-};
-
-const deleteItem = (id) => {
-  const item = state.items.find((i) => i.id === id);
-  commitUndoable({ ...state, items: state.items.filter((i) => i.id !== id) }, `Deleted "${item?.title ?? 'deadline'}"`);
-};
-
-const itemForm = createItemForm({
-  dialog: $('#item-dialog'), onSave: saveItem, onDelete: deleteItem, getTracks: () => state.tracks,
-});
-
-// ---- Lecture track dialog ----
-
-const replaceOrAppend = (list, entry) => (list.some((x) => x.id === entry.id)
-  ? list.map((x) => (x.id === entry.id ? entry : x))
-  : [...list, entry]);
-
-const saveTrack = (track) => {
-  commit({ ...state, tracks: replaceOrAppend(state.tracks, track) });
-  toast(`Saved "${track.name}"`);
-};
-
-/** Returns an error message instead of deleting when deadlines still link to the track. */
-const deleteTrack = (id) => {
-  const linked = state.items.filter((item) => item.parts.some((p) => p.trackId === id)).map((item) => item.title);
-  if (linked.length) return `Remove it from ${linked.join(', ')} first.`;
-  const track = state.tracks.find((t) => t.id === id);
-  commitUndoable({ ...state, tracks: state.tracks.filter((t) => t.id !== id) }, `Deleted "${track?.name ?? 'track'}"`);
-  return null;
-};
-
-const trackForm = createTrackForm({ dialog: $('#track-dialog'), onSave: saveTrack, onDelete: deleteTrack });
+const withCourse = (course) => ({ ...state, courses: state.courses.map((c) => (c.id === course.id ? course : c)) });
 
 // ---- Add-course wizard ----
 
-/** Adds a lecture track (if any) and its deadlines in one step, with Undo. */
-const addCourse = ({ track, items }) => {
-  const name = track?.name ?? items[0]?.course ?? 'course';
-  commitUndoable({
-    ...state,
-    tracks: track ? [...state.tracks, track] : state.tracks,
-    items: [...state.items, ...items],
-  }, `Added "${name}"`);
+const addCourse = (course) => {
+  const colored = assignColor(course, state.courses);
+  commitUndoable({ ...state, courses: [...state.courses, colored] }, `Added "${colored.name}"`);
 };
 
-const courseNames = () => [...state.tracks.map((t) => t.name), ...state.items.map((i) => i.course)].filter(Boolean);
+const courseWizard = createCourseWizard({
+  dialog: $('#course-dialog'),
+  onSave: addCourse,
+  getCourseNames: () => state.courses.map((c) => c.name),
+  getNextColor: () => nextColor(state.courses),
+});
 
-const courseWizard = createCourseWizard({ dialog: $('#course-dialog'), onSave: addCourse, getCourseNames: courseNames });
+// ---- Course changes (all undoable) ----
+
+/** Applies fn to one course; does nothing when fn returns the same course. */
+const changeCourse = (courseId, fn, message) => {
+  const course = findCourse(courseId);
+  if (!course) return;
+  const next = fn(course);
+  if (next === course) return;
+  commitUndoable(withCourse(next), message(next, course));
+};
+
+const watch = (courseId, delta) => changeCourse(courseId, (c) => setWatched(c, c.watched + delta, localTodayIso()),
+  (c) => `${c.name}: ${c.watched}/${releasedBy(c.schedule, localTodayIso())} watched`);
+
+const prepStep = (courseId, milestoneId, delta) => changeCourse(courseId, (c) => stepPrep(c, milestoneId, delta), (c) => {
+  const m = c.milestones.find((x) => x.id === milestoneId);
+  return `${m.title}: ${m.prep.done}/${m.prep.total} ${m.prep.unit}`;
+});
+
+const lectureChange = (courseId, iso, op) => changeCourse(courseId, (c) => (op === 'cancel' ? cancelLecture(c, iso) : addLecture(c, iso)),
+  () => `${op === 'cancel' ? 'Cancelled' : 'Added'} lecture on ${formatDate(iso)}`);
+
+const saveMilestoneTo = (courseId, milestone) => changeCourse(courseId, (c) => saveMilestone(c, milestone),
+  () => `Saved "${milestone.title}"`);
+
+const deleteMilestone = (courseId, milestoneId) => changeCourse(courseId, (c) => removeMilestone(c, milestoneId),
+  (c, before) => `Deleted "${before.milestones.find((m) => m.id === milestoneId)?.title ?? 'milestone'}"`);
+
+const saveCourse = (course) => changeCourse(course.id, () => course, () => `Saved "${course.name}"`);
+
+const deleteCourse = (courseId) => {
+  const course = findCourse(courseId);
+  if (!course) return;
+  detailDialog.close();
+  commitUndoable({ ...state, courses: state.courses.filter((c) => c.id !== courseId) }, `Deleted "${course.name}"`);
+};
+
+/** +1 from a Today row. */
+const doTask = (action) => (action.kind === 'lectures'
+  ? watch(action.courseId, 1)
+  : prepStep(action.courseId, action.milestoneId, 1));
+
+// ---- Course detail, milestone and edit sheets ----
+
+const detailDialog = $('#course-detail');
+let detailCourseId = null;
+
+const milestoneForm = createMilestoneForm({ dialog: $('#milestone-dialog'), onSave: saveMilestoneTo, onDelete: deleteMilestone });
+const markMilestoneClean = guardDialog($('#milestone-dialog'));
+
+const courseEditForm = createCourseEditForm({
+  dialog: $('#course-edit-dialog'),
+  onSave: saveCourse,
+  onDelete: deleteCourse,
+  getOtherNames: (id) => state.courses.filter((c) => c.id !== id).map((c) => c.name),
+});
+const markCourseEditClean = guardDialog($('#course-edit-dialog'));
+
+const colorOf = (courseId) => colorsById(state.courses).get(courseId);
+
+// The milestone sheet takes the color of the course it belongs to.
+const openMilestone = (courseId, milestone, kind) => {
+  $('#milestone-dialog').dataset.color = colorOf(courseId);
+  milestoneForm.open(courseId, milestone, kind);
+  markMilestoneClean();
+};
+
+const detailActions = (courseId) => ({
+  watch: (delta) => watch(courseId, delta),
+  stepPrep: (milestoneId, delta) => prepStep(courseId, milestoneId, delta),
+  editMilestone: (id) => openMilestone(courseId, findCourse(courseId)?.milestones.find((m) => m.id === id)),
+  addMilestone: (kind) => openMilestone(courseId, null, kind),
+  cancelLecture: (iso) => lectureChange(courseId, iso, 'cancel'),
+  addLecture: (iso) => lectureChange(courseId, iso, 'add'),
+});
+
+/** Redraws the open course sheet from the latest plan; closes it if the course is gone. */
+const renderDetail = (plan) => {
+  if (!detailCourseId) return;
+  const course = findCourse(detailCourseId);
+  if (!course) {
+    detailDialog.close();
+    return;
+  }
+  $('#course-detail-title').textContent = course.name;
+  detailDialog.dataset.color = colorOf(course.id);
+  renderCourseDetail($('#course-detail-body'), {
+    course,
+    planned: plan.courses.find((c) => c.id === course.id),
+    todayIso: localTodayIso(),
+    actions: detailActions(course.id),
+  });
+};
+
+const openCourse = (courseId) => {
+  detailCourseId = courseId;
+  renderDetail(planCourses(state, localTodayIso()));
+  detailDialog.scrollTop = 0;
+  detailDialog.showModal();
+};
+
+detailDialog.addEventListener('close', () => { detailCourseId = null; });
+document.querySelectorAll('dialog.sheet').forEach((sheet) => {
+  enableSwipeToClose(sheet);
+  enableBackdropClose(sheet);
+});
+detailDialog.querySelector('[data-detail-close]').addEventListener('click', () => detailDialog.close());
+$('#course-detail-edit').addEventListener('click', () => {
+  const course = findCourse(detailCourseId);
+  if (!course) return;
+  courseEditForm.open(course, colorOf(course.id));
+  markCourseEditClean();
+});
 
 // ---- Settings dialog ----
 
@@ -153,91 +217,63 @@ settingsForm.addEventListener('submit', (e) => {
 $('#export-btn').addEventListener('click', () => {
   const blob = new Blob([serializeState(state)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const link = h('a', { href: url, download: `deadlines-${localTodayIso()}.json` });
+  const link = h('a', { href: url, download: `courses-${localTodayIso()}.json` });
   document.body.append(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
 });
 
-$('#import-input').addEventListener('change', async (e) => {
-  const [file] = e.target.files;
-  e.target.value = '';
-  if (!file) return;
+/** Reads a backup file and replaces the data, asking first if courses would be lost. */
+const importBackup = async (file, { onError, onDone }) => {
   try {
     const result = parseState(await file.text());
     if (!result.ok) {
-      $('#settings-errors').textContent = `Import failed: ${result.error}`;
+      onError(`Import failed: ${result.error}`);
       return;
     }
-    if (!window.confirm(`Replace your current data with ${result.state.items.length} deadlines and ${result.state.tracks.length} lecture tracks?`)) return;
+    const question = replacePrompt(state.courses.length, result.state.courses.length);
+    if (question && !window.confirm(question)) return;
     commit(result.state);
-    settingsDialog.close();
-    toast('Import complete.');
+    onDone();
+    const count = result.state.courses.length;
+    toast(`Imported ${count} course${count === 1 ? '' : 's'}.`);
   } catch (error) {
-    $('#settings-errors').textContent = `Could not read the file: ${error.message}`;
+    onError(`Could not read the file: ${error.message}`);
   }
+};
+
+/** Runs `onFile` with the file picked in `input`, then clears it so the same file can be picked again. */
+const onFilePicked = (input, onFile) => input.addEventListener('change', () => {
+  const [file] = input.files;
+  input.value = '';
+  if (file) onFile(file);
 });
+
+onFilePicked($('#import-input'), (file) => importBackup(file, {
+  onError: (message) => { $('#settings-errors').textContent = message; },
+  onDone: () => settingsDialog.close(),
+}));
+
+// The welcome screen's "Import a backup" uses its own picker; errors go to a toast.
+const welcomeImportInput = h('input', { type: 'file', accept: 'application/json,.json', hidden: true, 'aria-hidden': 'true' });
+document.body.append(welcomeImportInput);
+onFilePicked(welcomeImportInput, (file) => importBackup(file, { onError: toast, onDone: () => {} }));
 
 // ---- Wiring ----
 
-const stepPart = (part, delta) => ({
-  ...part,
-  doneUnits: Math.min(part.totalUnits, Math.max(0, part.doneUnits + delta)),
-});
-
-/** +1 / −1 on a deadline's effort part, with Undo. */
-const step = (itemId, partId, delta) => {
-  const item = state.items.find((i) => i.id === itemId);
-  const part = item?.parts.find((p) => p.id === partId);
-  if (!part) return;
-  const next = stepPart(part, delta);
-  if (next.doneUnits === part.doneUnits) return;
-  const items = state.items.map((i) => (i.id !== itemId ? i : { ...i, parts: i.parts.map((p) => (p.id === partId ? next : p)) }));
-  commitUndoable({ ...state, items }, `${item.title}: ${next.doneUnits}/${next.totalUnits} ${next.unit}`);
-};
-
-/** +1 / −1 watched lecture, with Undo. Oldest first; can't watch one that isn't out yet. */
-const watch = (trackId, delta) => {
-  const track = state.tracks.find((t) => t.id === trackId);
-  if (!track) return;
-  const released = releasedBy(track, localTodayIso());
-  const watched = Math.min(released, Math.max(0, track.watched + delta));
-  if (watched === track.watched) return;
-  const tracks = state.tracks.map((t) => (t.id === trackId ? { ...t, watched } : t));
-  commitUndoable({ ...state, tracks }, `${track.name}: ${watched}/${released} watched`);
-};
-
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/** Scrolls to the first card of a course (opening Completed if needed) and highlights it. */
-const jumpToCourse = (key) => {
-  const card = root.querySelector(`[data-course="${CSS.escape(key)}"]`);
-  if (!card) return;
-  const details = card.closest('details');
-  if (details) details.open = true;
-  card.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
-  card.classList.remove('flash');
-  void card.offsetWidth; // restart the animation on repeated taps
-  card.classList.add('flash');
-};
-
-const markItemClean = guardDialog($('#item-dialog'));
-const markTrackClean = guardDialog($('#track-dialog'));
 const markSettingsClean = guardDialog(settingsDialog);
 const markCourseClean = guardDialog($('#course-dialog'));
 
 const actions = {
-  step,
-  watch,
-  jump: jumpToCourse,
-  edit: (id) => { itemForm.open(state.items.find((item) => item.id === id)); markItemClean(); },
-  editTrack: (id) => { trackForm.open(state.tracks.find((t) => t.id === id)); markTrackClean(); },
+  task: doTask,
+  openCourse,
+  importBackup: () => welcomeImportInput.click(),
   settings: () => { openSettings(); markSettingsClean(); },
   addCourse: () => { courseWizard.open(); markCourseClean(); },
 };
 
-$('#add-btn').addEventListener('click', () => actions.edit(null));
+$('#add-btn').addEventListener('click', () => actions.addCourse());
 hideWhileScrollingDown($('#add-btn'), 'fab-hidden');
 
 // iOS Safari only applies :active (pressed styles) when a touch listener exists.
@@ -252,8 +288,8 @@ const init = () => {
     state = loaded.state;
   } else {
     const backupKey = `${STORAGE_KEY}:unreadable-${Date.now()}`;
-    localStorage.setItem(backupKey, localStorage.getItem(STORAGE_KEY));
-    state = { ...DEFAULT_STATE, items: [], tracks: [] };
+    localStorage.setItem(backupKey, localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY));
+    state = { ...DEFAULT_STATE, courses: [] };
     toast(`Saved data could not be loaded (${loaded.error}). A copy was kept as "${backupKey}".`);
   }
   render();

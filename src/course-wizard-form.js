@@ -3,12 +3,13 @@
 // values between the DOM and a draft.
 
 import { h, formatDate, localTodayIso, newId } from './dom.js';
-import { WIZARD_STEPS, blankDeadline, blankDraft, buildCourse, courseSummary, stepErrors } from './course-wizard.js';
-import { courseKey } from './overview.js';
-import { WEEKDAY_NAMES, lectureDates, releasedBy } from './tracks.js';
+import { WIZARD_STEPS, blankDeadline, blankDraft, buildCourse, courseSummary, stepErrors, takenName } from './course-wizard.js';
+import { WEEKDAY_NAMES, lectureDates, releasedBy } from './course/schedule.js';
 import { readBreaks, wireAddBreak } from './break-rows.js';
 import { readExtraDates, wireAddExtraDate } from './extra-date-rows.js';
-import { deadlineRow, readDeadline, renumberRows, setLecturesAvailable } from './wizard-deadline-row.js';
+import { deadlineRow, readDeadline, renumberRows } from './wizard-deadline-row.js';
+import { createSwatchPicker } from './swatch-picker.js';
+import { animatePageChange } from './step-transition.js';
 
 const WEEK_ORDER = [0, 1, 2, 3, 4, 5, 6]; // Sun first
 const STEP_NAMES = Object.freeze({ name: 'Name', lectures: 'Lectures', deadlines: 'Exams & assignments', review: 'Review' });
@@ -24,10 +25,11 @@ const summaryList = (summary) => h('div', { class: 'wizard-summary-body group' }
     : h('p', { class: 'muted' }, 'None yet — add them any time with +.'));
 
 /**
- * Calls onSave({ track, items }) with a validated course. getCourseNames()
- * returns the names already in use, to point out when a course already exists.
+ * Calls onSave(course) with a validated v5 course. getCourseNames() returns
+ * the names already in use; a new course must not reuse one. getNextColor()
+ * returns the color to preselect.
  */
-export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
+export const createCourseWizard = ({ dialog, onSave, getCourseNames, getNextColor }) => {
   const form = dialog.querySelector('form');
   const $ = (selector) => form.querySelector(selector);
   const steps = [...form.querySelectorAll('[data-step]')];
@@ -37,6 +39,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
   const extrasEl = $('#wizard-extras');
   const backBtn = $('#wizard-back-btn');
   const nextBtn = $('#wizard-next-btn');
+  const swatches = createSwatchPicker({ container: $('#wizard-swatches'), dialog });
   let stepIndex = 0;
 
   $('#wizard-days').replaceChildren(...WEEK_ORDER.map((d) => h('label', { class: 'day-toggle' },
@@ -45,6 +48,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
 
   const readDraft = () => ({
     name: form.elements.courseName.value,
+    color: swatches.get(),
     hasLectures: form.elements.hasLectures.checked,
     lectures: {
       weekdays: [...form.querySelectorAll('[name="weekday"]:checked')].map((el) => Number(el.value)),
@@ -61,27 +65,25 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
   const today = () => localTodayIso();
 
   const updateNameHint = () => {
-    const key = courseKey(form.elements.courseName.value);
-    const existing = form.elements.courseName.value.trim()
-      && getCourseNames().find((name) => courseKey(name) === key);
+    const name = form.elements.courseName.value;
+    const existing = name.trim() ? takenName(name, getCourseNames()) : null;
     const hint = $('#wizard-name-hint');
     hint.hidden = !existing;
-    hint.textContent = existing ? `You already have "${existing}". What you add here joins it.` : '';
+    hint.textContent = existing ? `You already have "${existing}". Pick another name.` : '';
   };
 
   const updateLecturePreview = () => {
     const draft = readDraft();
     const ok = draft.hasLectures && stepErrors('lectures', { ...draft, lectures: { ...draft.lectures, watched: 0 } }, today()).length === 0;
-    const track = { ...draft.lectures };
+    const schedule = { ...draft.lectures, addedDates: draft.lectures.extraDates, removedDates: [] };
     $('#wizard-lecture-preview').textContent = ok
-      ? `${lectureDates(track).length} lectures this semester · ${releasedBy(track, today())} out so far`
+      ? `${lectureDates(schedule).length} lectures this semester · ${releasedBy(schedule, today())} out so far`
       : '';
   };
 
   const syncLectureToggle = () => {
     const on = form.elements.hasLectures.checked;
     $('#wizard-lecture-fields').hidden = !on;
-    setLecturesAvailable(deadlinesEl, on);
     updateLecturePreview();
   };
 
@@ -92,7 +94,6 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
 
   const addDeadline = (kind) => {
     const row = deadlineRow(blankDeadline(kind), {
-      lecturesAvailable: form.elements.hasLectures.checked,
       onRemove: (el) => { el.remove(); syncDeadlinesEmpty(); },
     });
     deadlinesEl.append(row);
@@ -100,7 +101,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
     row.querySelector('input').focus();
   };
 
-  const showStep = (index) => {
+  const swapTo = (index) => {
     stepIndex = index;
     const step = WIZARD_STEPS[index];
     steps.forEach((el) => { el.hidden = el.dataset.step !== step; });
@@ -113,9 +114,24 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
     form.querySelector(`[data-step="${step}"] h2`).focus();
   };
 
+  /** Moves to step `index`; `animate` fades the page and eases the sheet height. */
+  const showStep = (index, { animate = true } = {}) => {
+    if (!animate) {
+      swapTo(index);
+      return;
+    }
+    animatePageChange({
+      sheet: dialog,
+      fromPage: steps.find((el) => !el.hidden),
+      swap: () => swapTo(index),
+      getToPage: () => steps.find((el) => !el.hidden),
+    });
+  };
+
   const open = () => {
-    const draft = blankDraft(today());
+    const draft = blankDraft(today(), getNextColor());
     form.reset();
+    swatches.set(draft.color);
     form.elements.startDate.value = draft.lectures.startDate;
     form.elements.hoursPerLecture.value = draft.lectures.hoursPerLecture;
     form.elements.watched.value = draft.lectures.watched;
@@ -126,12 +142,12 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
     syncLectureToggle();
     syncDeadlinesEmpty();
     dialog.showModal();
-    showStep(0);
+    showStep(0, { animate: false });
   };
 
   const finish = () => {
     const draft = readDraft();
-    const errors = stepErrors('review', draft, today());
+    const errors = stepErrors('review', draft, today(), getCourseNames());
     if (errors.length) {
       errorsEl.textContent = errors.join(' ');
       return;
@@ -147,7 +163,7 @@ export const createCourseWizard = ({ dialog, onSave, getCourseNames }) => {
       finish();
       return;
     }
-    const errors = stepErrors(step, readDraft(), today());
+    const errors = stepErrors(step, readDraft(), today(), getCourseNames());
     if (errors.length) {
       errorsEl.textContent = errors.join(' ');
       return;
