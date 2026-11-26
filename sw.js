@@ -51,6 +51,7 @@ const APP_SHELL = [
   './src/progress-model.js',
   './src/scroll.js',
   './src/sheet-backdrop.js',
+  './src/sheet-motion.js',
   './src/sheet-swipe.js',
   './src/step-transition.js',
   './src/swatch-picker.js',
