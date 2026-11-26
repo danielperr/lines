@@ -180,6 +180,15 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--text-sub); color: var(--muted); }
 .summary .summary-hours { margin-left: auto; }
 
+/* Stat tiles: next deadline (tinted in its course color) and lecture backlog. */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: var(--radius-group); background: var(--surface); box-shadow: var(--shadow-card); }
+.stat[data-color] { background: var(--course-tint); box-shadow: none; }
+.stat-label { font-size: var(--text-foot); font-weight: 700; color: var(--muted); }
+.stat-value { font-family: var(--font-display); font-size: 22px; font-weight: 800; line-height: 1.15; color: var(--course-ink); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.stat[class*="status-"] .stat-value { color: var(--status); }
+.stat-detail { font-size: var(--text-foot); color: var(--muted); overflow-wrap: anywhere; unicode-bidi: plaintext; }
+
 .section-head { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
 .section-head + .course-list { margin-top: 12px; }
 .section-title { font-family: var(--font-display); font-size: 22px; font-weight: 800; letter-spacing: -0.01em; margin-top: 12px; }
