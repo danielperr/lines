@@ -7,6 +7,7 @@ import { courseLectures, lectureJobs, summarizeLectures } from './lectures.js';
 import { prepJobs, summarizePrep } from './prep.js';
 import { dailyHours, slackCalculator } from './slack.js';
 import { SEVERITY, courseSignals, courseStatus } from './status.js';
+import { activeSnooze } from './snooze.js';
 import { todayTasks } from './today.js';
 
 const nextMilestoneOf = (course, todayIso) => {
@@ -38,6 +39,7 @@ const summarizeCourse = ({ course, lectures, prep }, slackAt, perDay, todayIso) 
     prep,
     nextMilestone,
     nextPrep: nextPrepOf(prep),
+    snoozedUntil: activeSnooze(course, todayIso),
   };
 };
 

@@ -41,6 +41,7 @@ const APP_SHELL = [
   './src/course/slack.js',
   './src/course/status.js',
   './src/course/store.js',
+  './src/course/snooze.js',
   './src/course/today.js',
   './src/home-model.js',
   './src/home-stats.js',

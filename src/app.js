@@ -1,6 +1,7 @@
 import { assignColor, colorsById, nextColor } from './course/color.js';
 import { addLecture, cancelLecture, removeMilestone, saveMilestone, setWatched, stepPrep } from './course/edit.js';
 import { planCourses } from './course/planner.js';
+import { snoozeCourse, snoozeError, unsnoozeCourse } from './course/snooze.js';
 import { releasedBy } from './course/schedule.js';
 import {
   DEFAULT_STATE, LEGACY_STORAGE_KEY, STORAGE_KEY, loadState, parseState, saveState, serializeState,
@@ -100,6 +101,18 @@ const prepStep = (courseId, milestoneId, delta) => changeCourse(courseId, (c) =>
 const lectureChange = (courseId, iso, op) => changeCourse(courseId, (c) => (op === 'cancel' ? cancelLecture(c, iso) : addLecture(c, iso)),
   () => `${op === 'cancel' ? 'Cancelled' : 'Added'} lecture on ${formatDate(iso)}`);
 
+const snooze = (courseId, untilIso) => {
+  const error = snoozeError(untilIso, localTodayIso());
+  if (error) {
+    toast(error);
+    return;
+  }
+  changeCourse(courseId, (c) => snoozeCourse(c, untilIso, localTodayIso()),
+    (c) => `${c.name}: off Today until ${formatDate(untilIso)}`);
+};
+
+const unsnooze = (courseId) => changeCourse(courseId, unsnoozeCourse, (c) => `${c.name}: back on Today`);
+
 const saveMilestoneTo = (courseId, milestone) => changeCourse(courseId, (c) => saveMilestone(c, milestone),
   () => `Saved "${milestone.title}"`);
 
@@ -152,6 +165,8 @@ const detailActions = (courseId) => ({
   addMilestone: (kind) => openMilestone(courseId, null, kind),
   cancelLecture: (iso) => lectureChange(courseId, iso, 'cancel'),
   addLecture: (iso) => lectureChange(courseId, iso, 'add'),
+  snooze: (iso) => snooze(courseId, iso),
+  unsnooze: () => unsnooze(courseId),
 });
 
 /** Redraws the open course sheet from the latest plan; closes it if the course is gone. */

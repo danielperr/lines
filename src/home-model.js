@@ -83,6 +83,7 @@ export const courseRow = (course, color) => {
     milestone: course.nextMilestone
       ? { title: course.nextMilestone.title, date: course.nextMilestone.date, daysTo: course.nextMilestone.daysTo }
       : null,
+    snoozedUntil: course.snoozedUntil ?? null,
     prepNotice: course.nextPrep ? { title: course.nextPrep.title, opensOn: course.nextPrep.opensOn } : null,
     label: [`${course.name}: ${course.statusText}.`, progress ? `${progress.label}.` : null].filter(Boolean).join(' '),
   };

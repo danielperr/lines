@@ -1,6 +1,9 @@
 // Today's suggested work across all courses: about one day's study hours,
 // earliest due first. Only released lectures and prep whose window is open
-// are suggested; on a tie, lectures come before prep.
+// are suggested; on a tie, lectures come before prep. A snoozed course is
+// left out (lectures and prep) until the snooze ends.
+
+import { activeSnooze } from './snooze.js';
 
 const KIND_ORDER = Object.freeze({ lectures: 0, prep: 1 });
 
@@ -46,6 +49,7 @@ const toTask = (group, units) => {
  */
 export const todayTasks = (entries, budgetHours, todayIso) => {
   const groups = entries
+    .filter(({ course }) => !activeSnooze(course, todayIso))
     .flatMap(({ course, lectures, prep }) => [...lectureGroups(course, lectures, todayIso), ...prepGroups(course, prep)])
     .sort(byPriority);
   return groups.reduce(({ budget, tasks }, group) => {
