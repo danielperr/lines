@@ -1,0 +1,77 @@
+# CI/CD for the study-deadlines app. See AGENTS.md → "Deployment pipeline".
+#
+#   pull request → test + build (a check; deploys nothing)
+#   push to dev  → test + build, then deploy Worker study-deadlines-dev (wrangler --env dev)
+#   push to main → test + build, then deploy Worker study-deadlines (production)
+#
+# This workflow is the only deploy path. Secrets (see AGENTS.md):
+#   CLOUDFLARE_API_TOKEN   environment secret on `dev` and on `production`,
+#                          each a token scoped to that environment's Worker
+#   CLOUDFLARE_ACCOUNT_ID  repository secret
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+
+jobs:
+  check:
+    name: Test and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  deploy:
+    name: Deploy to ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+    needs: check
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'dev' }}
+      url: ${{ github.ref_name == 'main' && 'https://study.danielperr.com' || 'https://study-deadlines-dev.study-deadlines.workers.dev' }}
+    # One deploy per branch at a time; a newer push waits rather than racing.
+    concurrency:
+      group: deploy-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Check Cloudflare secrets are set
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=""
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || missing="$missing CLOUDFLARE_API_TOKEN"
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || missing="$missing CLOUDFLARE_ACCOUNT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secrets:$missing (token: Settings → Environments → ${{ github.ref_name == 'main' && 'production' || 'dev' }}; account ID: repository secret)"
+            exit 1
+          fi
+      - name: Deploy with wrangler
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Uses the wrangler from package-lock.json (installed by npm ci above).
+          command: ${{ github.ref_name == 'main' && 'deploy' || 'deploy --env dev' }}

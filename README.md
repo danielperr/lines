@@ -32,7 +32,7 @@ npm run build            # dist/ with a content-hashed offline cache
 
 Work branches off `dev` and merges back into it by PR; `dev` is promoted to
 `main` for releases. Pushes to `dev` deploy the dev site, pushes to `main`
-deploy production (study.danielperr.com), both via Cloudflare Workers Builds.
+deploy production (study.danielperr.com), both via GitHub Actions (.github/workflows/ci.yml).
 Manual deploys are forbidden. Full rules: [AGENTS.md](AGENTS.md).
 
 ## Layout
