@@ -1,6 +1,7 @@
 // Course-first persistence (v5). Reads older deadline/track data and migrates
 // it; never overwrites the old key, so pre-v5 data stays as a backup.
 
+import { isValidIsoDate } from '../dates.js';
 import { isColorKey } from './color.js';
 import { validateCourse } from './course.js';
 import { migrateV4 } from './migrate-v4.js';
@@ -37,11 +38,13 @@ const normalizeMilestone = (raw) => ({
 
 /**
  * Keep only known fields at every level; fill optional lists. An unknown
- * color is dropped rather than failing the load: it is only cosmetic.
+ * color or unreadable snooze date is dropped rather than failing the load:
+ * neither changes the plan's figures.
  */
 const normalizeCourse = (raw) => ({
   ...pick(raw, COURSE_FIELDS),
   ...(isColorKey(raw?.color) ? { color: raw.color } : {}),
+  ...(isValidIsoDate(raw?.snoozedUntil) ? { snoozedUntil: raw.snoozedUntil } : {}),
   schedule: normalizeSchedule(raw?.schedule),
   milestones: Array.isArray(raw?.milestones) ? raw.milestones.map(normalizeMilestone) : raw?.milestones,
 });
