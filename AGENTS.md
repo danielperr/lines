@@ -7,8 +7,8 @@ before you branch, commit, open a PR or think about deploying.
 
 | Branch | Role | Deploys to | How |
 |---|---|---|---|
-| `main` | Production. Only reviewed work from `dev`. | https://study.danielperr.com (Worker `study-deadlines`) | Automatically, by Cloudflare Workers Builds, on every push to `main` |
-| `dev` | Trunk. Default base for all work. | https://study-deadlines-dev.study-deadlines.workers.dev (Worker `study-deadlines-dev`) | Automatically, by Cloudflare Workers Builds, on every push to `dev` |
+| `main` | Production. Only reviewed work from `dev`. | https://study.danielperr.com (Worker `study-deadlines`) | Automatically, by GitHub Actions, on every push to `main` |
+| `dev` | Trunk. Default base for all work. | https://study-deadlines-dev.study-deadlines.workers.dev (Worker `study-deadlines-dev`) | Automatically, by GitHub Actions, on every push to `dev` |
 | `claude/*`, `feat/*`, `fix/*`, … | Short-lived work branches | Nowhere | — |
 
 **Production deploys only from `main`.** Nothing else ever reaches
@@ -19,8 +19,9 @@ running for real.
 
 ## Deployment policy
 
-- Deploys happen **only** through Cloudflare Workers Builds, triggered by a push
-  to `main` or `dev`. There are no other deploy paths.
+- Deploys happen **only** through the GitHub Actions workflow
+  [.github/workflows/ci.yml](.github/workflows/ci.yml), triggered by a push to
+  `main` or `dev`. There are no other deploy paths.
 - **Manual deployments are forbidden.** Do not run `wrangler deploy`,
   `wrangler versions upload`, `wrangler versions deploy`, `wrangler rollback`,
   `wrangler preview` or any other command that publishes, from a laptop, an
@@ -77,19 +78,40 @@ only time a work branch targets `main`.
   The `dev` environment must keep `"routes": []` so it can never claim the
   production domain.
 
-## Cloudflare Workers Builds setup
+## Deployment pipeline (GitHub Actions)
 
-Configured in the Cloudflare dashboard (Workers & Pages → the Worker →
-Settings → Build). Both Workers are connected to this GitHub repository.
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs on every PR into
+`dev`/`main` and every push to them:
 
-| Setting | `study-deadlines` (prod) | `study-deadlines-dev` |
+| Trigger | Job `check` | Job `deploy` |
 |---|---|---|
-| Production branch | `main` | `dev` |
-| Build command | `npm ci && npm test && npm run build` | `npm ci && npm test && npm run build` |
-| Deploy command | `npx wrangler deploy` | `npx wrangler deploy --env dev` |
-| Builds for non-production branches | Off | Off |
+| PR into `dev` or `main` | `npm ci`, `npm test`, `npm run build` | — |
+| Push to `dev` | same | `wrangler deploy --env dev` → Worker `study-deadlines-dev` (GitHub environment `dev`) |
+| Push to `main` | same | `wrangler deploy` → Worker `study-deadlines` (GitHub environment `production`) |
 
-A failing test fails the build, and nothing is deployed.
+A failing test or build fails `check`, and nothing is deployed. Deploys for the
+same branch never overlap (a newer push waits).
+
+Repository secrets (Settings → Secrets and variables → Actions):
+`CLOUDFLARE_API_TOKEN` (a Cloudflare API token with the "Edit Cloudflare
+Workers" template) and `CLOUDFLARE_ACCOUNT_ID`. The deploy job fails with a
+clear error if either is missing.
+
+Cloudflare Workers Builds (the dashboard Git integration) must stay
+**disconnected** on both Workers, or every push deploys twice.
+
+### Debugging a failed run
+
+Agents may read and re-run workflow runs; re-running redeploys the same commit
+and is the one allowed way to retry a deploy.
+
+```bash
+gh run list --workflow ci.yml --limit 5
+gh run view <run-id> --log-failed
+gh run rerun <run-id> --failed
+```
+
+Editing the workflow is a normal change: branch from `dev` and open a PR.
 
 ## Project basics
 

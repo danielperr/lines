@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "study-deadlines",
   "compatibility_date": "2026-11-23",
-  // Deploys run only in Cloudflare Workers Builds (push to main → prod, push to dev → dev).
+  // Deploys run only in GitHub Actions (.github/workflows/ci.yml: push to main → prod, push to dev → dev).
   // Manual deploys are forbidden; see AGENTS.md. Only the built app (./dist) is published.
   "assets": {
     "directory": "./dist"
@@ -14,7 +14,7 @@
     { "pattern": "study.danielperr.com", "custom_domain": true }
   ],
   "env": {
-    // Dev stage: Workers Builds runs `wrangler deploy --env dev` on every push to
+    // Dev stage: GitHub Actions runs `wrangler deploy --env dev` on every push to
     // the dev branch, publishing a separate Worker (study-deadlines-dev) on
     // workers.dev only. Routes stay empty so it can never take over the
     // production domain.
