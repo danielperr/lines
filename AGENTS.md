@@ -92,10 +92,20 @@ only time a work branch targets `main`.
 A failing test or build fails `check`, and nothing is deployed. Deploys for the
 same branch never overlap (a newer push waits).
 
-Repository secrets (Settings → Secrets and variables → Actions):
-`CLOUDFLARE_API_TOKEN` (a Cloudflare API token with the "Edit Cloudflare
-Workers" template) and `CLOUDFLARE_ACCOUNT_ID`. The deploy job fails with a
-clear error if either is missing.
+Secrets live in GitHub → Settings → Environments, one Cloudflare token per
+environment so each can touch only its own Worker:
+
+| Where | Secret | Value |
+|---|---|---|
+| Environment `dev` → Environment secrets | `CLOUDFLARE_API_TOKEN` | Token scoped to Worker `study-deadlines-dev` |
+| Environment `production` → Environment secrets | `CLOUDFLARE_API_TOKEN` | Token scoped to Worker `study-deadlines` plus zone `danielperr.com` (custom domain) |
+| Settings → Secrets and variables → Actions → Repository secrets | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID (not a secret, shared by both) |
+
+Do not add a repository-level `CLOUDFLARE_API_TOKEN`: an environment secret
+overrides a repository secret with the same name, but a missing environment
+secret would silently fall back to it. Each environment's deployment branch
+rule should allow only its branch (`dev` → `dev`, `production` → `main`).
+The deploy job fails with a clear error if a secret is missing.
 
 Cloudflare Workers Builds (the dashboard Git integration) must stay
 **disconnected** on both Workers, or every push deploys twice.
