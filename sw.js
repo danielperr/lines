@@ -50,7 +50,6 @@ const APP_SHELL = [
   './src/extra-date-rows.js',
   './src/offline.js',
   './src/progress-model.js',
-  './src/scroll.js',
   './src/sheet-backdrop.js',
   './src/sheet-motion.js',
   './src/sheet-swipe.js',

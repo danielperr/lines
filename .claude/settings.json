@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(wrangler deploy:*)",
+      "Bash(npx wrangler deploy:*)",
+      "Bash(wrangler versions:*)",
+      "Bash(npx wrangler versions:*)",
+      "Bash(wrangler rollback:*)",
+      "Bash(npx wrangler rollback:*)",
+      "Bash(wrangler preview:*)",
+      "Bash(npx wrangler preview:*)",
+      "Bash(git push origin main:*)",
+      "Bash(git push origin dev:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ]
+  }
+}
