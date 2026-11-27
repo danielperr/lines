@@ -89,6 +89,7 @@ const courseItem = (course, color, onOpen) => {
   const row = courseRow(course, color);
   const meta = [
     row.milestone ? milestoneLine(row.milestone) : null,
+    row.snoozedUntil ? `Snoozed until ${formatDate(row.snoozedUntil)}` : null,
     row.prepNotice ? `${row.prepNotice.title} prep starts ${formatDate(row.prepNotice.opensOn)}` : null,
     row.lecturesText,
   ].filter(Boolean);

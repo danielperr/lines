@@ -1,8 +1,9 @@
 // Course detail sheet body: status, lectures stepper, exams and assignments
 // with prep steppers, and the semester timeline with cancel/restore/add.
 
-import { daysBetween } from './dates.js';
+import { addDays, daysBetween } from './dates.js';
 import { h, formatDate, formatRelativeDays, formatShortDate } from './dom.js';
+import { activeSnooze, defaultSnoozeUntil } from './course/snooze.js';
 import { courseTimeline } from './course/timeline.js';
 import { detailHeader, kindLabel, lectureLine, prepLine, splitTimeline, timelineRow } from './detail-model.js';
 import { progressBar, stepButtons } from './view-parts.js';
@@ -37,7 +38,24 @@ const addLectureRow = (onAdd) => {
     h('button', { class: 'btn-plain', type: 'button', onClick: () => { if (input.value) onAdd(input.value); } }, 'Add'));
 };
 
-const lecturesSection = (course, planned, actions) => (planned.lectures ? [
+// Recordings not up yet? Keep this course out of Today for a while.
+const snoozeRow = (course, todayIso, actions) => {
+  const until = activeSnooze(course, todayIso);
+  if (until) {
+    return h('li', { class: 'detail-row snooze-row' },
+      h('span', { class: 'detail-row-title' }, `Off Today until ${formatDate(until)}`),
+      h('button', { class: 'btn-plain', type: 'button', 'aria-label': `Put ${course.name} back on Today`, onClick: actions.unsnooze }, 'Resume'));
+  }
+  const input = h('input', {
+    type: 'date', min: addDays(todayIso, 1), value: defaultSnoozeUntil(todayIso), 'aria-label': 'Snooze course until',
+  });
+  return h('li', { class: 'detail-row snooze-row' },
+    h('span', { class: 'detail-row-title' }, 'Snooze until'),
+    input,
+    h('button', { class: 'btn-plain', type: 'button', 'aria-label': `Snooze ${course.name}`, onClick: () => actions.snooze(input.value) }, 'Snooze'));
+};
+
+const lecturesSection = (course, planned, todayIso, actions) => (planned.lectures ? [
   h('h3', { class: 'group-header' }, 'Lectures'),
   h('ul', { class: 'list' },
     h('li', { class: 'detail-row' },
@@ -50,7 +68,8 @@ const lecturesSection = (course, planned, actions) => (planned.lectures ? [
         onMinus: () => actions.watch(-1),
         onPlus: () => actions.watch(1),
       })),
-    addLectureRow(actions.addLecture)),
+    addLectureRow(actions.addLecture),
+    snoozeRow(course, todayIso, actions)),
 ] : []);
 
 const milestoneItem = (m, todayIso, actions) => {
@@ -109,12 +128,12 @@ const timelineSection = (course, todayIso, actions) => {
 
 /**
  * `actions`: watch(delta), stepPrep(milestoneId, delta), editMilestone(id),
- * addMilestone(kind), cancelLecture(iso), addLecture(iso).
+ * addMilestone(kind), cancelLecture(iso), addLecture(iso), snooze(iso), unsnooze().
  */
 export const renderCourseDetail = (body, { course, planned, todayIso, actions }) => {
   body.replaceChildren(...[
     headerBand(planned),
-    ...lecturesSection(course, planned, actions),
+    ...lecturesSection(course, planned, todayIso, actions),
     ...milestonesSection(course, todayIso, actions),
     ...timelineSection(course, todayIso, actions),
   ].filter(Boolean));

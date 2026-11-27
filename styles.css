@@ -376,8 +376,8 @@ main { max-width: 640px; margin: 0 auto; padding: 0 var(--gutter); display: grid
 .detail-row-title { flex: 1; min-width: 0; font-size: var(--text-body); overflow-wrap: anywhere; unicode-bidi: plaintext; }
 .detail-row-note { font-size: var(--text-foot); color: var(--muted); }
 .milestone-row { cursor: pointer; }
-.add-lecture .detail-row-title { flex: 1 0 auto; }
-.add-lecture input[type="date"] { flex: 0 1 10.5em; width: 10.5em; border: 0; background: var(--fill); color: var(--text); border-radius: var(--radius-pill); padding: 6px 10px; font: inherit; font-size: var(--text-sub); }
+.add-lecture .detail-row-title, .snooze-row .detail-row-title { flex: 1 0 auto; }
+.add-lecture input[type="date"], .snooze-row input[type="date"] { flex: 0 1 10.5em; width: 10.5em; border: 0; background: var(--fill); color: var(--text); border-radius: var(--radius-pill); padding: 6px 10px; font: inherit; font-size: var(--text-sub); }
 .detail-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
 .timeline-earlier summary { cursor: pointer; color: var(--muted); font-size: var(--text-sub); padding: 6px var(--gutter); }

@@ -1,6 +1,7 @@
 // A course is the root entity: a name, an optional lecture schedule, how many
 // lectures have been watched, and its milestones.
 
+import { isValidIsoDate } from '../dates.js';
 import { isColorKey } from './color.js';
 import { validateMilestone } from './milestone.js';
 import { lectureDates, validateSchedule } from './schedule.js';
@@ -41,10 +42,14 @@ const milestonesErrors = (milestones) => {
 const colorErrors = (course) =>
   (!('color' in course) || isColorKey(course.color) ? [] : ['Color is not one of the palette colors.']);
 
+// Snooze is optional; when present it must be a real date.
+const snoozeErrors = (course) =>
+  (!('snoozedUntil' in course) || isValidIsoDate(course.snoozedUntil) ? [] : ['Snooze date is not a valid date.']);
+
 /** Returns human-readable problems; empty means valid. */
 export const validateCourse = (course) => {
   const scheduleErrors = course.schedule === null ? [] : validateSchedule(course.schedule);
   const errors = [...nameErrors(course.name), ...scheduleErrors];
   if (scheduleErrors.length === 0) errors.push(...watchedErrors(course));
-  return [...errors, ...colorErrors(course), ...milestonesErrors(course.milestones)];
+  return [...errors, ...colorErrors(course), ...snoozeErrors(course), ...milestonesErrors(course.milestones)];
 };
